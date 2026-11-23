@@ -65,15 +65,36 @@ def arm(q):
  goal(q);active=True;wr(40,1)
  if rd(40)!=1:raise RuntimeError("Torque enable failed readback")
 def torque_off():
+ global active
  for _ in range(3):
   try:
    wr(40,0)
    if rd(40)==0:
+    active=False
     return
   except RuntimeError:
    pass
   time.sleep(.05)
  raise RuntimeError("Torque off could not be confirmed. Disconnect servo power.")
+
+
+def record_coast():
+ torque_off()
+ begin = time.monotonic()
+ records = []
+ try:
+  while time.monotonic() - begin < .5:
+   before = time.monotonic()
+   entry = obs()
+   entry['monotonic_s'] = (before + time.monotonic()) / 2
+   records.append(entry)
+   time.sleep(.02)
+ finally:
+  (r/(name+'-coast.json')).write_text(json.dumps(records))
+ if any(not lo <= entry['ticks'] <= hi for entry in records):
+  raise RuntimeError('Unpowered shaft moved beyond configured travel during coast')
+
+
 def home():
  q=rd(56,2);arm(q);start=time.monotonic()
  for i in range(1,max(2,1+math.ceil(abs(center-q)/6))):
@@ -132,11 +153,17 @@ try:
     elif not on and x['torque_enable']:
      raise RuntimeError("Unexpected torque re-enable in reference")
     sample(start,t,q,on);time.sleep(max(0,.02-(time.monotonic()-start-t)))
-   torque_off();save();meta['completed'].append(name);print(name,len(samples),flush=True)
+   record_coast();save();meta['completed'].append(name);print(name,len(samples),flush=True)
 except Exception as e:meta['stop']=name+' '+repr(e)
 finally:
  try:
-  if active:torque_off()
+  if active:
+   try:
+    record_coast()
+   except RuntimeError as exc:
+    meta['coast_error'] = str(exc)
+    if active:
+     raise
   if settings_changed:
    if rd(21)!=saved[21]:
     setting(55,0);setting(21,saved[21])
