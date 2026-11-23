@@ -1,0 +1,23 @@
+{
+  "reference_member": "raw/2025-02-27_10h28m06.json",
+  "reference_url": "https://huggingface.co/buckets/Gregwar/bam_data/resolve/feetech_sts3215_raw.zip?download=true",
+  "reference_voltage": 7.4,
+  "reference_subtype": "not identified",
+  "mount": "metal horn only",
+  "id": 3,
+  "completed": [],
+  "zero": 1413,
+  "kp": 32,
+  "kd": 32,
+  "ki": 0,
+  "start": {
+    "ticks": 1413,
+    "volts": 5.0,
+    "temp_C": 23,
+    "current_raw": 0
+  },
+  "current_trip_raw": 150,
+  "min_volts": 5,
+  "stop": "RuntimeError(\"telemetry guard {'ticks': 1463, 'volts': 4.9, 'temp_C': 23, 'current_raw': 1, 'timestamp': 3.149572874994192, 'command_timestamp': 3.148866249997809, 'goal_deg': 4.74609375, 'position_deg': 4.39453125}\")",
+  "torque_final": 0
+}
