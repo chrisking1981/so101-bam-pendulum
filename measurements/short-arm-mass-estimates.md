@@ -21,12 +21,12 @@ Signed error = 100 × (estimate − reference) / reference. Positive means overe
 
 | Configuration | Estimate (g) | Reference (g) | Error | Photo |
 |---|---:|---:|---:|---|
-| Bare arm | 13.20 | 8.77 | +50.51% | [Scale](scale-photos/bare-arm.jpg) |
+| Bare arm | 13.20 | 8.77 | +50.51% | [Bare printed arm only, no screws](scale-photos/bare-arm.jpg) |
 | One M3 | 0.46 | 0.46 | +0.00% | [Scale](scale-photos/one-m3.jpg) |
 | Two M3 | 0.92 | 0.92 | +0.00% | [Scale](scale-photos/two-m3.jpg) |
 | Three M3 | 1.38 | 1.37 | +0.73% | [Scale](scale-photos/three-m3.jpg) |
 | Four M3 | 1.84 | 1.83 | +0.55% | [Scale](scale-photos/four-m3.jpg) |
 | M4 bolt + nut (difference) | 2.70 | 2.71 | -0.37% | [Scale](scale-photos/all-fasteners.jpg) |
 | All fasteners | 4.54 | 4.54 | +0.00% | [Scale](scale-photos/all-fasteners.jpg) |
-| Arm + four M3 (sum) | 15.00 | 10.60 | +41.51% | [Scale](scale-photos/bare-arm.jpg) |
+| Arm + four M3 (sum) | 15.00 | 10.60 | +41.51% | Calculated from [bare arm](scale-photos/bare-arm.jpg) + [four separate screws](scale-photos/four-m3.jpg) |
 | Arm + all fasteners | 17.70 | 13.31 | +32.98% | [Scale](scale-photos/assembly.jpg) |
