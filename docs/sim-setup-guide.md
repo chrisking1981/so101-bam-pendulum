@@ -5,7 +5,7 @@ C044 1:191, C046 1:147) for reinforcement learning. Each point links to the data
 marked *provisional* rest on a single unit, a single load or a single fit.
 
 Status (2026-11-23): all six SO-101 leader servos measured without load; C046, C044 (both units) and C001 measured with a
-450 g / 100 mm pendulum; C046 also with 281 g / 92 mm. One BAM fit so far (C046).
+450 g / 100 mm pendulum; C046 also with 281 g / 92 mm. BAM fits for the C046 and the C044 (a C044 fit also tested on a second unit).
 
 ## 1. Fix the firmware acceleration profile before anything else
 
@@ -36,8 +36,11 @@ Status (2026-11-23): all six SO-101 leader servos measured without load; C046, C
 
 - Use `bam.mujoco.MujocoController` (CPU) or `bam.mjlab.BamActuatorCfg` (GPU), with joints driven by `<motor>` actuators. BAM's
   `to_mujoco` export to a `position` actuator is deprecated: it flattens away the load-dependent friction.
-- **Model choice:** for the C046, **m4** (load-dependent and Stribeck friction) generalises best: 0.57° on unseen runs, against
-  0.88° for m1 and 0.63° for m6. *Provisional: one servo type.*
+- **Model choice:** m4 or m6, which add load-dependent and Stribeck friction to m1. C046: m4 gives 0.57° on unseen runs (m1 0.88°, m6 0.63°). C044: m6 0.63° and m4 0.66°
+  on unseen runs without `lift_and_drop`, and 0.65°/0.67° on a **second unit the fit never saw** ([C044 fit](../fits/C044/README.md)). Both beat m1.
+- **Stick-slip cannot be predicted exactly.** After a release with a light load, the arm sometimes sticks part-way up its swing and sometimes falls back.
+  Which one happens varies between units and runs, and the models miss it (up to 14° error on that run). Static friction in simulation plus friction
+  randomization is the way to cover it.
 - The friction under load is real and large. The C001 holds the 450 g pendulum at 45° with torque off and does not move. With P = 8, the C046 and C001 hold
   the arm almost as well as with P = 32 while using a third of the PWM ([C046 450 g](../measurements/C046/20261123-173924-id5-pendulum-450g/README.md),
   [C001 450 g](../measurements/C001/20261123-175101-id2-pendulum-450g/README.md)).
@@ -87,7 +90,7 @@ Keep the type-specific model as the centre, and do not widen ranges to cover oth
 
 ## Open items
 
-- Fits for the C044 and C001 with their own data.
+- A fit for the C001 with its own data (Rhoban's model already predicts it to about 1°).
 - A first MuJoCo / mjlab test of the C046 model against a held-out real trajectory, and of the full randomization setup.
 - The 12 V 1:345 follower servos.
 - Measuring the control-loop latency and battery sag on the actual robot.
