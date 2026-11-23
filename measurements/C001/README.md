@@ -33,6 +33,8 @@ the 20 no-load runs (mass 0, length 0), followed by 0.546 kg / 0.10 m, 1.084 kg 
 
 ## Runs
 
+**Final valid no-load set and comparison table: [final-noload-comparison.md](final-noload-comparison.md).**
+
 | Folder | What |
 |---|---|
 | [20261123-153513-noload-profile254](20261123-153513-noload-profile254/) | All 20 no-load replays with the profile as found (85 = 254, 41 = 0) |
