@@ -1,0 +1,20 @@
+{
+  "status": "aborted_by_current_guard",
+  "complete": false,
+  "servo": "C044",
+  "bus_id": 3,
+  "horn_installed": true,
+  "pendulum_installed": false,
+  "sample_count_before_trip": 44,
+  "trip": {
+    "encoder_ticks": 997,
+    "input_volts": 4.6,
+    "temp_C": 23,
+    "current_raw": 233,
+    "absolute_current_raw_limit": 200
+  },
+  "final_encoder_ticks": 1003,
+  "final_torque_enable": 0,
+  "completed_bam_patterns": [],
+  "notes": "First positive 15-degree step. Raw current register units, not amperes. Event is not a stall diagnosis. No gain changes. Exclude partial trace from fitting."
+}
