@@ -11,7 +11,11 @@ parser.add_argument('gains', type=int, choices=[4, 8, 16, 32], nargs='+')
 parser.add_argument('--pattern', choices=patterns, action='append')
 parser.add_argument('--operator-confirmed-clear', action='store_true',
                     help='Onsite operator has verified the fixed servo, bare horn and clear motion area.')
+parser.add_argument('--brutal-amplitude', type=int, choices=[5, 15, 30, 60],
+                    help='Diagnostic variant of the BAM step pattern, in degrees.')
 args = parser.parse_args()
+if args.brutal_amplitude is not None and args.pattern != ['brutal']:
+ parser.error('--brutal-amplitude requires --pattern brutal')
 r = args.output
 r.mkdir(exist_ok=False)
 p = sdk.PortHandler(args.port)
@@ -109,7 +113,11 @@ try:
   for pattern in args.pattern or patterns:
    name=f'p{kp}-{pattern}-setup';samples=[];home();save()
    member,d=refs[kp,pattern];a=d['entries'];ts=[x['timestamp'] for x in a];scale=.9 if pattern=='sin_sin' else 1
-   name=f'p{kp}-{pattern}'+('-90pct' if scale!=1 else '');samples=[]
+   suffix = '-90pct' if pattern == 'sin_sin' else ''
+   if args.brutal_amplitude is not None:
+    scale = args.brutal_amplitude / 90
+    suffix = f'-diagnostic-{args.brutal_amplitude}deg'
+   name=f'p{kp}-{pattern}{suffix}';samples=[]
    meta[name]={'member':member,'scale':scale,'p':kp,'d':32}
    targets=[center+round(x['goal_position']*scale*4096/(2*math.pi)) for x in a if x['torque_enable']]
    assert min(targets)>=lo+45 and max(targets)<=hi-45
