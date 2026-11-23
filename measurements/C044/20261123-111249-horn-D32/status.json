@@ -1,0 +1,32 @@
+{
+  "completed": [],
+  "stop": "p32-lift_and_drop RuntimeError(\"telemetry guard {'ticks': 1289, 'volts': 4.9, 'temp_C': 23, 'current_raw': 3, 'timestamp': 1.214711354499741, 'command_timestamp': 1.213951249999809, 'goal_ticks': 1254, 'enabled': True}\")",
+  "inputs": "Rhoban Feetech raw archive, no tip load",
+  "servo": "C044 ID 3, horn only",
+  "voltage_bounds": [
+    5,
+    5.5
+  ],
+  "current_trip_raw": 150,
+  "original": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "55": 1
+  },
+  "zero_ticks": 1925,
+  "p32-lift_and_drop": {
+    "member": "raw/2025-02-27_10h27m56.json",
+    "scale": 1,
+    "p": 32,
+    "d": 32
+  },
+  "final": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "40": 0,
+    "55": 1
+  },
+  "final_ticks": 1286
+}
