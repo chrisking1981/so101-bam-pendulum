@@ -15,3 +15,5 @@ The full-frequency sweep has stopped on 4.8 V at P=4 and P=32 with the current n
 The abrupt step also stopped at P=4 on a 4.6 V / 162 raw current report. [Partial recording](20261123-114630-horn-step-sweep/README.md).
 
 [Voltage, current and angle around the three stops](horn-supply-diagnostic.md).
+
+Verify the linked curves offline against the original BAM ZIP with `python3 scripts/verify_horn_matrix.py /path/to/feetech_sts3215_raw.zip`. Add `--require-complete` to fail when any of the 20 combinations is missing. The check compares each recorded command with its source and checks duration, release-phase coverage, and documented final motor state.
