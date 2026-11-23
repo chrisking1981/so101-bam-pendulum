@@ -14,7 +14,7 @@ Reference: https://bam.readthedocs.io/en/latest/identification/index.html
 [Short pendulum and fastener mass estimates before weighing](measurements/short-arm-mass-estimates.md)
 
 ### Firmware acceleration profile: check it first
-The STS3215 has an acceleration profile in registers 85 (maximum acceleration) and 41 (acceleration). It adds about 35–50 ms of start-up delay to every move. LeRobot turns it on, and so do other tools. Rhoban's BAM STS3215 data matches a servo with the profile off (85 = 0, then 41 = 0). Record and simulate with the same 85/41 values the robot will run with, store those values with every log, and read them back at startup. See [C001 no-load replay of Rhoban's data](measurements/C001/README.md).
+The STS3215 has an acceleration profile in registers 85 (maximum acceleration) and 41 (acceleration). It adds about 35–50 ms of start-up delay to every move. LeRobot turns it on, and so do other tools. Rhoban's BAM STS3215 data matches a servo with the profile off (85 = 0, then 41 = 0). Record and simulate with the same 85/41 values the robot will run with, store those values with every log, and read them back at startup. See [C001 no-load replay of Rhoban's data](measurements/C001/README.md) and [C044 vs C001 vs Rhoban, no load](measurements/C044/20261123-161907-noload-profile-off/README.md).
 
 The recorder used here (rustypot, about 1.2 kHz, `--replay` of Rhoban logs) is in [scripts/bam_feetech](scripts/bam_feetech/).
 

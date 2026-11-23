@@ -2,7 +2,8 @@
 import time, json, numpy as np, rustypot
 from bam.feetech.sts import sm
 c = rustypot.Sts3215PyController('/dev/cu.usbmodem5B421351891', 1000000, 0.05)
-ID = 2
+import sys
+ID = int(sys.argv[1]) if len(sys.argv) > 1 else 2
 # pure bus round trip
 t=[];
 for _ in range(500):
