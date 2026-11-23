@@ -1,0 +1,10 @@
+{
+  "first_post_stop_torque_readback": 1,
+  "verified_after_second_off_command": 0,
+  "verified_p": 32,
+  "verified_d": 32,
+  "verified_i": 0,
+  "verified_lock": 1,
+  "reported_voltage_V": 5.0,
+  "reported_temperature_C": 22
+}
