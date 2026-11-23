@@ -1,5 +1,7 @@
 # Short pendulum mass predictions before weighing — 2026-11-23
 
+The pre-weighing estimates were made by GPT-6.2 Astra with medium reasoning effort (verified for the estimate turns). The builder supplied the fastener dimensions and later provided the scale readings.
+
 For BAM-kort-100. Dimensions of the fasteners were reported by the builder. Masses below are estimates. Steel fasteners, fully threaded shanks and lengths measured under the head are assumed.
 
 | Part | Basis | Predicted mass |

@@ -12,3 +12,6 @@ Separate the printed arm from hardware around the rotation axis and from the tip
 Reference: https://bam.readthedocs.io/en/latest/identification/index.html
 
 [Short pendulum and fastener mass estimates before weighing](measurements/short-arm-mass-estimates.md)
+
+### First C044 baseline (planned)
+With the servo body fixed, pendulum removed and no tip load, document whether the metal horn and centre screw are installed. Read the current encoder position, firmware settings, supply voltage and permitted range before movement. Use the starting position as the reference and run three identical small position steps: reference → +15° → reference, holding each target for one second. Timestamp commands and encoder samples separately, including the settling intervals; log supply voltage and current where available. Compare onset delay, rise time, overshoot, final error and repeatability. This baseline should precede replay with the weighed arm; the earlier 90° check only verified travel.
