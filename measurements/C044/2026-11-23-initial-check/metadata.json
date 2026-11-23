@@ -22,5 +22,7 @@
   "all_fasteners_measured_g": 4.54,
   "m4_bolt_and_nut_by_difference_g": 2.71,
   "arm_and_all_fasteners_measured_g": 13.31,
-  "horn_mass_measured_g": null
+  "horn_mass_measured_g": null,
+  "m4_nut_measured_g": 0.6,
+  "m4_bolt_measured_g": 2.12
 }

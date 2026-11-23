@@ -17,7 +17,7 @@ Whole-gram scale predictions: bare print 13 g; four M3 screws 2 g; M4 pair 3 g; 
 
 ## Comparison with scale readings
 
-Signed error = 100 × (estimate − reference) / reference. Positive means overestimated. Values for two/three screws and all fasteners use the original component estimates. M4 pair reference = 4.54 − 1.83 g; arm plus four screws = 8.77 + 1.83 g. Scale resolution: 0.01 g. Bolt and nut were not weighed separately.
+Signed error = 100 × (estimate − reference) / reference. Positive means overestimated. Values for two/three screws and all fasteners use the original component estimates. M4 pair reference = 4.54 − 1.83 g; arm plus four screws = 8.77 + 1.83 g. Scale resolution: 0.01 g. The separate bolt and nut readings sum to 2.72 g; the difference of the group readings gives 2.71 g.
 
 | Configuration | Estimate (g) | Reference (g) | Error | Photo |
 |---|---:|---:|---:|---|
@@ -26,6 +26,8 @@ Signed error = 100 × (estimate − reference) / reference. Positive means overe
 | Two M3 | 0.92 | 0.92 | +0.00% | [Scale](scale-photos/two-m3.jpg) |
 | Three M3 | 1.38 | 1.37 | +0.73% | [Scale](scale-photos/three-m3.jpg) |
 | Four M3 | 1.84 | 1.83 | +0.55% | [Scale](scale-photos/four-m3.jpg) |
+| M4 nut | 0.65 | 0.60 | +8.33% | [Scale](scale-photos/m4-nut.jpg) |
+| M4 bolt | 2.05 | 2.12 | -3.30% | [Scale](scale-photos/m4-bolt.jpg) |
 | M4 bolt + nut (difference) | 2.70 | 2.71 | -0.37% | [Scale](scale-photos/all-fasteners.jpg) |
 | All fasteners | 4.54 | 4.54 | +0.00% | [Scale](scale-photos/all-fasteners.jpg) |
 | Arm + four M3 (sum) | 15.00 | 10.60 | +41.51% | Calculated from [bare arm](scale-photos/bare-arm.jpg) + [four separate screws](scale-photos/four-m3.jpg) |
