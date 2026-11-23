@@ -9,6 +9,8 @@ parser.add_argument('port')
 parser.add_argument('archive')
 parser.add_argument('gains', type=int, choices=[4, 8, 16, 32], nargs='+')
 parser.add_argument('--pattern', choices=patterns, action='append')
+parser.add_argument('--operator-confirmed-clear', action='store_true',
+                    help='Onsite operator has verified the fixed servo, bare horn and clear motion area.')
 args = parser.parse_args()
 r = args.output
 r.mkdir(exist_ok=False)
@@ -32,8 +34,11 @@ def guard(e):
  elif low_voltage_since is None:
   low_voltage_since = now
  low_voltage = e['volts'] < 4.9 or (low_voltage_since is not None and now - low_voltage_since >= .06)
- if not (lo+20 < e['ticks'] < hi-20 and not low_voltage and e['volts'] <= 8.4 and e['temp_C'] < 45 and e['current_raw'] < 150 and time.time()-os.stat('/tmp/so101-realsense-live/color.bmp').st_mtime < 2):
+ if not (lo+20 < e['ticks'] < hi-20 and not low_voltage and e['volts'] <= 8.4 and e['temp_C'] < 45 and e['current_raw'] < 150):
   raise RuntimeError('telemetry guard '+str(e))
+ if not args.operator_confirmed_clear:
+  if time.time()-os.stat('/tmp/so101-realsense-live/color.bmp').st_mtime >= 2:
+   raise RuntimeError('D435 stream is stale')
 
 refs={}
 with zipfile.ZipFile(args.archive) as z:
@@ -93,7 +98,7 @@ try:
  assert rd(62)>=50
  center=(lo+hi)//2
  guard(obs());saved={k:rd(k) for k in [21,22,23,55]}
- meta.update(original=saved,zero_ticks=center)
+ meta.update(original=saved,zero_ticks=center,operator_confirmed_clear=args.operator_confirmed_clear)
  for kp in args.gains:
   name=f'p{kp}-preflight';samples=[]
   assert rd(40)==0 and rd(22)==32
@@ -109,6 +114,7 @@ try:
    targets=[center+round(x['goal_position']*scale*4096/(2*math.pi)) for x in a if x['torque_enable']]
    assert min(targets)>=lo+45 and max(targets)<=hi-45
    guard(obs());arm(center);on=True;start=time.monotonic()
+   meta[name]['start_monotonic_s'] = start
    while (t:=time.monotonic()-start)<ts[-1]:
     x=a[max(0,bisect.bisect_right(ts,t)-1)];q=center+round(x['goal_position']*scale*4096/(2*math.pi))
     if x['torque_enable']:goal(q)
