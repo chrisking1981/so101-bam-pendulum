@@ -1,0 +1,21 @@
+trajectory        kp  ours err  rhob err  |ours-rhob| mean     max   (degrees)
+brutal             4      6.62     12.25              6.79   46.61
+brutal             8      4.23      8.54              5.17   55.18
+brutal            16      3.60      6.73              3.39   51.58
+brutal            32      3.61      6.09              2.96   47.54
+lift_and_drop      4      6.73     10.67              2.56    6.69
+lift_and_drop      8      3.52      5.72              0.71    3.52
+lift_and_drop     16      1.80      2.92              0.48    1.79
+lift_and_drop     32      0.96      1.55              0.16    0.94
+sin_sin            4     10.36     15.26              5.87   15.78
+sin_sin            8      6.03      9.86              3.95   11.34
+sin_sin           16      3.18      5.50              2.17    6.79
+sin_sin           32      1.66      2.93              1.10    3.91
+sin_time_square    4     22.59     29.90             12.18   31.27
+sin_time_square    8     15.22     25.85             13.91   50.44
+sin_time_square   16      8.68     20.19             12.90   56.32
+sin_time_square   32      4.67     17.15             13.14   64.18
+up_and_down        4      3.59      4.44              1.72    4.02
+up_and_down        8      1.87      2.27              0.86    2.21
+up_and_down       16      1.02      1.17              0.42    1.05
+up_and_down       32      0.58      0.66              0.23    0.59
