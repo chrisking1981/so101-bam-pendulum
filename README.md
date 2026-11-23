@@ -10,3 +10,5 @@ Use measurements/<variant>/<date>-<unique-run>/ for each run. Keep raw recording
 Separate the printed arm from hardware around the rotation axis and from the tip payload. The standard BAM pendulum approximation assumes a uniform rod to the load radius. With a fixed arm and multiple holes, its own centre of mass and inertia stay fixed as the load moves.
 
 Reference: https://bam.readthedocs.io/en/latest/identification/index.html
+
+[Short pendulum and fastener mass estimates before weighing](measurements/short-arm-mass-estimates.md)
