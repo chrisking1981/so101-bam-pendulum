@@ -24,12 +24,28 @@ the loop:
 
 This only shows that the model is consistent, stands, and that the BAM servos drive it as intended. It is not yet validated against a real robot.
 
+## Hand-made shuffle gait (not a trained policy)
+
+`gait.py` grid-searches a simple open-loop rhythm. The hips swing like scissors (`hip_L = A sin(2πft)`, `hip_R = −hip_L`), and the
+ankles follow with amplitude B and phase φ. The search covered 48 combinations (f 1.5/2.5/3.5 Hz, A 0.25/0.4 rad, B 0.1/0.25 rad, four phases);
+42 of them fell over. The best ([gait_best.json](gait_best.json)) is **f = 1.5 Hz, A = 0.25 rad, B = 0.25 rad, φ = π**, with the ankles in counter-phase. Over 10 s it shuffles
+**76 cm forward** with 0.5 cm sideways drift and at most 8° tilt. Full log: [gait_search.log](gait_search.log).
+
+[biped_walk.mp4](biped_walk.mp4) (10 s, 30 fps, camera follows the pelvis):
+
+![Walking frames](biped_walk_frames.png)
+
+This rhythm is only a demonstration that the model can move forward. Without hip roll it slides its feet; a real gait has to come
+from RL, and the real robot will slide differently depending on its floor and its foot pads.
+
 ## Run
 
 From a [Rhoban/bam](https://github.com/Rhoban/bam) checkout with `uv sync --extra mujoco`:
 
 ```bash
 MUJOCO_GL=cgl uv run python /path/to/sim/biped/run_biped.py --render frames
+MUJOCO_GL=cgl uv run python /path/to/sim/biped/gait.py --search
+MUJOCO_GL=cgl uv run python /path/to/sim/biped/gait.py --video walk.mp4
 ```
 
 To look at the model interactively (without the BAM servos, so the joints are limp):

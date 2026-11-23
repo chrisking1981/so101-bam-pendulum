@@ -1,0 +1,50 @@
+f=1.5 A=0.25 B=0.1 phi=0.00: dx=-15.5 cm dy=+2.3 cm worst tilt 40 deg FELL
+f=1.5 A=0.25 B=0.1 phi=1.57: dx=-37.6 cm dy=+19.8 cm worst tilt 17 deg 
+f=1.5 A=0.25 B=0.1 phi=3.14: dx=+5.9 cm dy=+5.0 cm worst tilt 40 deg FELL
+f=1.5 A=0.25 B=0.1 phi=4.71: dx=-7.2 cm dy=+2.3 cm worst tilt 40 deg FELL
+f=1.5 A=0.25 B=0.25 phi=0.00: dx=-13.6 cm dy=+0.1 cm worst tilt 40 deg FELL
+f=1.5 A=0.25 B=0.25 phi=1.57: dx=-19.4 cm dy=-5.0 cm worst tilt 40 deg FELL
+f=1.5 A=0.25 B=0.25 phi=3.14: dx=+42.9 cm dy=-0.2 cm worst tilt 8 deg 
+f=1.5 A=0.25 B=0.25 phi=4.71: dx=-6.9 cm dy=+3.6 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.1 phi=0.00: dx=-8.3 cm dy=-4.4 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.1 phi=1.57: dx=-11.4 cm dy=+1.5 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.1 phi=3.14: dx=-6.6 cm dy=-3.2 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.1 phi=4.71: dx=-10.3 cm dy=-5.4 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.25 phi=0.00: dx=-14.0 cm dy=-5.7 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.25 phi=1.57: dx=-11.8 cm dy=+1.6 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.25 phi=3.14: dx=-15.6 cm dy=-23.0 cm worst tilt 40 deg FELL
+f=1.5 A=0.4 B=0.25 phi=4.71: dx=-7.8 cm dy=-3.5 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.1 phi=0.00: dx=-16.3 cm dy=-1.8 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.1 phi=1.57: dx=-66.8 cm dy=+60.1 cm worst tilt 20 deg 
+f=2.5 A=0.25 B=0.1 phi=3.14: dx=+7.7 cm dy=-10.2 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.1 phi=4.71: dx=-10.8 cm dy=-5.5 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.25 phi=0.00: dx=-22.3 cm dy=-8.8 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.25 phi=1.57: dx=-21.0 cm dy=+24.9 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.25 phi=3.14: dx=-7.2 cm dy=+0.8 cm worst tilt 40 deg FELL
+f=2.5 A=0.25 B=0.25 phi=4.71: dx=-15.1 cm dy=+2.1 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.1 phi=0.00: dx=-16.5 cm dy=+8.3 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.1 phi=1.57: dx=-14.5 cm dy=-0.9 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.1 phi=3.14: dx=-6.9 cm dy=-1.1 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.1 phi=4.71: dx=-11.8 cm dy=-2.4 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.25 phi=0.00: dx=-14.3 cm dy=+7.1 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.25 phi=1.57: dx=-12.7 cm dy=+0.1 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.25 phi=3.14: dx=+2.3 cm dy=+9.9 cm worst tilt 40 deg FELL
+f=2.5 A=0.4 B=0.25 phi=4.71: dx=-7.7 cm dy=+2.0 cm worst tilt 40 deg FELL
+f=3.5 A=0.25 B=0.1 phi=0.00: dx=-17.7 cm dy=-0.5 cm worst tilt 40 deg FELL
+f=3.5 A=0.25 B=0.1 phi=1.57: dx=-40.7 cm dy=+37.3 cm worst tilt 28 deg 
+f=3.5 A=0.25 B=0.1 phi=3.14: dx=-6.7 cm dy=+1.0 cm worst tilt 40 deg FELL
+f=3.5 A=0.25 B=0.1 phi=4.71: dx=-12.4 cm dy=+5.7 cm worst tilt 40 deg FELL
+f=3.5 A=0.25 B=0.25 phi=0.00: dx=-19.3 cm dy=+2.8 cm worst tilt 40 deg FELL
+f=3.5 A=0.25 B=0.25 phi=1.57: dx=+23.4 cm dy=+21.2 cm worst tilt 9 deg 
+f=3.5 A=0.25 B=0.25 phi=3.14: dx=-10.1 cm dy=-2.5 cm worst tilt 40 deg FELL
+f=3.5 A=0.25 B=0.25 phi=4.71: dx=-6.1 cm dy=-3.6 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.1 phi=0.00: dx=-12.0 cm dy=+1.0 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.1 phi=1.57: dx=-6.2 cm dy=-5.5 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.1 phi=3.14: dx=-12.2 cm dy=-2.6 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.1 phi=4.71: dx=-6.9 cm dy=-6.3 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.25 phi=0.00: dx=-12.7 cm dy=+3.7 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.25 phi=1.57: dx=-27.3 cm dy=+19.8 cm worst tilt 13 deg 
+f=3.5 A=0.4 B=0.25 phi=3.14: dx=-5.2 cm dy=+1.9 cm worst tilt 40 deg FELL
+f=3.5 A=0.4 B=0.25 phi=4.71: dx=-4.8 cm dy=+2.8 cm worst tilt 40 deg FELL
+BEST {'f': 1.5, 'A': 0.25, 'B': 0.25, 'phi': 3.141592653589793, 'lean': 0.0, 'direction': 1} {'dx': np.float64(0.42913909285454965), 'dy': np.float64(-0.00208999283575678), 'fell': False, 'worst': np.float64(7.6014392361115135), 't': 6.000000000000338, 'yaw': np.float64(10.520404709249526)}
+done
