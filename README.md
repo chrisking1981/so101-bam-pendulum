@@ -1,6 +1,23 @@
 # SO-101 leader servo pendulum
 A printable bench arm for measuring Feetech STS3215-C001 (1:345), C044 (1:191) and C046 (1:147) position tracking under known loads. The goal is a MuJoCo actuator model whose predictions match held-out physical trajectories. No validated actuator fit is available yet.
 
+## Findings so far (no load, 2026-11-23)
+
+Three leader-arm servos were measured, each with only the metal horn attached and at 7.40 V. Each one replayed the exact
+command sequences of [Rhoban's public BAM STS3215 data](https://huggingface.co/buckets/Gregwar/bam_data) (20 no-load logs).
+
+| Finding | Result | Details |
+|---|---|---|
+| Hidden firmware acceleration profile (register 85) | Adds about 35–50 ms of start-up delay to every move. It was on (85 = 254) on all three servos as received. Disabling it (85 = 0, then 41 = 0) works, and once stored in EEPROM it survives a power cycle. Toggling it in RAM before each run proved unreliable | [C001](measurements/C001/README.md) |
+| C001 (1:345) vs Rhoban's STS3215 | With the profile off, mean trace difference 0.74° over 20 runs. Our unit tracks about 5% worse. Rhoban's unit was most likely a C001 with the profile off | [Table](measurements/C001/final-noload-comparison.md) |
+| C044 (1:191) vs C001 (1:345) | Without load the C044 has about 35–40% less lag, peaks about 1.6× faster in a step (about 520 vs 320 °/s) and overshoots more. Rhoban's 1:345 model does not fit a C044 | [C044](measurements/C044/20261123-161907-noload-profile-off/README.md) |
+| Two C044 units from one kit | Mean trace difference 0.27°, about 3% in tracking error | [Unit comparison](measurements/C044/20261123-163134-unit2-id1-noload-profile-off/README.md) |
+| USB hub, bus latency | Not a factor. Round trip 0.34 ms, and the servo flags *moving* 1.5 ms after a goal write | [C001](measurements/C001/README.md#finding-1-the-extra-delay-comes-from-the-servo-firmware-not-from-usb) |
+| Servo voltage register | Unreliable: it reads about 0.3 V low at idle and spikes to 17.8 V during motion. Do not use it as a guard | [C001](measurements/C001/README.md) |
+
+Pendulum (loaded) runs and BAM fits have not been done yet. The earlier C044 runs in `measurements/C044/2026112*-horn-*` were made with a 5 V
+adapter, D = 32, the profile on and about 40 Hz logging, so they are not comparable with the runs above.
+
 ## Prints
 Open BAM-kort-100.3mf (load holes at 50, 75 and 100 mm) or BAM-lang-150.3mf (150 mm) in your slicer, flat, at 100%. Mounting face: 4 mm, four M3 clearance holes on a 14 mm pitch circle. The mounting coupon fit one C044 horn. Check clearance and thread engagement on your own hardware. Print strength under dynamic load has not been established. Parametric source: bam_meetarmen.py (Python, build123d and trimesh).
 
@@ -14,7 +31,7 @@ Reference: https://bam.readthedocs.io/en/latest/identification/index.html
 [Short pendulum and fastener mass estimates before weighing](measurements/short-arm-mass-estimates.md)
 
 ### Firmware acceleration profile: check it first
-The STS3215 has an acceleration profile in registers 85 (maximum acceleration) and 41 (acceleration). It adds about 35–50 ms of start-up delay to every move. LeRobot turns it on, and so do other tools. Rhoban's BAM STS3215 data matches a servo with the profile off (85 = 0, then 41 = 0). Record and simulate with the same 85/41 values the robot will run with, store those values with every log, and read them back at startup. See [C001 no-load replay of Rhoban's data](measurements/C001/README.md) [C044 vs C001 vs Rhoban, no load](measurements/C044/20261123-161907-noload-profile-off/README.md) and [two C044 units compared](measurements/C044/20261123-163134-unit2-id1-noload-profile-off/README.md).
+The STS3215 has an acceleration profile in registers 85 (maximum acceleration) and 41 (acceleration). It adds about 35–50 ms of start-up delay to every move. LeRobot turns it on, and so do other tools. Rhoban's BAM STS3215 data matches a servo with the profile off (85 = 0, then 41 = 0). Record and simulate with the same 85/41 values the robot will run with, store those values with every log, and read them back at startup. See [C001 no-load replay of Rhoban's data](measurements/C001/README.md), [C044 vs C001 vs Rhoban, no load](measurements/C044/20261123-161907-noload-profile-off/README.md) and [two C044 units compared](measurements/C044/20261123-163134-unit2-id1-noload-profile-off/README.md).
 
 The recorder used here (rustypot, about 1.2 kHz, `--replay` of Rhoban logs) is in [scripts/bam_feetech](scripts/bam_feetech/).
 
