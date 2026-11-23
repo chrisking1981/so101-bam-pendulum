@@ -36,6 +36,9 @@ Status (2026-11-23): all six SO-101 leader servos measured without load; C046, C
 
 - Use `bam.mujoco.MujocoController` (CPU) or `bam.mjlab.BamActuatorCfg` (GPU), with joints driven by `<motor>` actuators. BAM's
   `to_mujoco` export to a `position` actuator is deprecated: it flattens away the load-dependent friction.
+- **Tested in MuJoCo** ([fits/mujoco](../fits/mujoco/README.md)). With BAM in the loop, MuJoCo reproduces real held-out runs to 0.54–0.62° (without stick-slip
+  runs), the same as BAM's own simulator. A constant `position` actuator with the same fitted values is 1.5–3.6× worse. It fails most clearly after torque release
+  (no swing-through) and under load (too much sag).
 - **Model choice:** m4 or m6, which add load-dependent and Stribeck friction to m1. C046: m4 gives 0.57° on unseen runs (m1 0.88°, m6 0.63°). C044: m6 0.63° and m4 0.66°
   on unseen runs without `lift_and_drop`, and 0.65°/0.67° on a **second unit the fit never saw** ([C044 fit](../fits/C044/README.md)). Both beat m1.
 - **Stick-slip cannot be predicted exactly.** After a release with a light load, the arm sometimes sticks part-way up its swing and sometimes falls back.
@@ -91,6 +94,6 @@ Keep the type-specific model as the centre, and do not widen ranges to cover oth
 ## Open items
 
 - A fit for the C001 with its own data (Rhoban's model already predicts it to about 1°).
-- A first MuJoCo / mjlab test of the C046 model against a held-out real trajectory, and of the full randomization setup.
+- The full randomization setup in mjlab, and a multi-joint robot model.
 - The 12 V 1:345 follower servos.
 - Measuring the control-loop latency and battery sag on the actual robot.
