@@ -1,6 +1,8 @@
 # SO-101 leader servo pendulum
 A printable bench arm for measuring Feetech STS3215-C001 (1:345), C044 (1:191) and C046 (1:147) position tracking under known loads. The goal is a MuJoCo actuator model whose predictions match held-out physical trajectories. No validated actuator fit is available yet.
 
+**How to set up the simulation, based on these measurements: [docs/sim-setup-guide.md](docs/sim-setup-guide.md).**
+
 ## Findings so far (no load, 2026-11-23)
 
 Six leader-arm servos were measured (C001, two C044 units and three C046 units), each with only the metal horn attached and at 7.40 V. Each one replayed the exact
