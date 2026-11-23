@@ -1,0 +1,18 @@
+{
+  "completed": [],
+  "stop": "preflight RuntimeError('(-6, 0)')",
+  "inputs": "Rhoban Feetech raw archive, no tip load",
+  "servo": "C044 ID 3, horn only",
+  "voltage_bounds": [
+    5,
+    5.5
+  ],
+  "current_trip_raw": 150,
+  "original": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "55": 1
+  },
+  "zero_ticks": 1925
+}

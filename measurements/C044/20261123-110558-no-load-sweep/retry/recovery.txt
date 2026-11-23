@@ -1,0 +1,2 @@
+Stopped before any motion. Gain change did not pass readback. A separate port reopen showed P=4, D=32, I=0, torque=0, lock=0. Restored and verified P=32, D=32, I=0, torque=0, lock=1. Final position 1893 ticks, 5.0 V, 23 C.
+All four unloaded sin_sin source logs span 201.59 degrees. Configured hardware bounds span 194.33 degrees (820..3031 ticks). A scaled variant must remain separately labeled.

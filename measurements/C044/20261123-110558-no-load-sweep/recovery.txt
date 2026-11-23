@@ -1,0 +1,1 @@
+No motion in this attempt. After the bus write error, readback found P=4, lock=0, torque=0. Separate recovery restored and verified P=32 D=32 I=0 lock=1 torque=0.
