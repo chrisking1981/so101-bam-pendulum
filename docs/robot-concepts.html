@@ -1,4 +1,4 @@
-<title>Wiebel, Knijp, Hop en Pip</title>
+<title>STS3215 Robotkarakters</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
@@ -24,7 +24,7 @@
   --w_house: #2f7d4a; --w_clev1: #c6e85a; --w_clev2: #ffd447; --w_hub: #ff8a3d; --w_beam: #3f9a57; --w_dot: #fff4d6;   /* Wiebel */
   --k_house: #8e2a2a; --k_clev: #ff8a66; --k_hub: #2ec4b6; --k_disc: #1f6f8b;                                      /* Knijp */
   --h_house: #5a3d9a; --h_clev: #c3b0f5; --h_hub: #5fd3a6;                                                         /* Hop */
-  --p_house: #22385c; --p_clev: #7fc8f8; --p_orange: #ff9f1c; --p_navy: #2b3a5c; --p_white: #f7f4ec;   /* Pip */
+  --b_house: #cfd5dc; --b_clev: #f3f4f6; --b_hub: #59636f; --b_batt: #2b2f36; --b_pcb: #1f7a4d; --b_imu: #e2453c;   /* simpele biped */
   --belly: #f6e8cc; --sclera: #fbfaf6; --pupil: #15171a; --blush: #f59aa6;
   --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -85,15 +85,15 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
 <div class="wrap">
   <header>
     <div class="eyebrow">SO-101 leader-servo's · 1× C001 · 2× C044 · 3× C046</div>
-    <h1>Wiebel, Knijp, Hop en Pip</h1>
-    <p class="lede">Wiebel, Knijp en Hop gebruiken alle zes servo's uit de leader-arm; Pip is de biped met vier (2× C044, 2× C046). De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in dikke geprinte houders met ronde naven en U-beugels, in de stijl van de SO-101 Elk karakter heeft een eigen kleurenpalet voor zijn printdelen. Sleep om te draaien, scroll of knijp om te zoomen.</p>
+    <h1>Wiebel, Knijp, Hop en een simpele biped</h1>
+    <p class="lede">Wiebel, Knijp en Hop gebruiken alle zes servo's uit de leader-arm; de simpele biped gebruikt er vier (2× C044, 2× C046) en is ontworpen om zo goed mogelijk te simuleren. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in dikke geprinte houders met ronde naven en U-beugels, in de stijl van de SO-101 Elk karakter heeft een eigen kleurenpalet voor zijn printdelen. Sleep om te draaien, scroll of knijp om te zoomen.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Robotconcept">
     <button role="tab" id="tab-rups" aria-selected="true" data-k="rups">Wiebel de rups</button>
     <button role="tab" id="tab-krab" aria-selected="false" data-k="krab">Knijp de krab</button>
     <button role="tab" id="tab-hup" aria-selected="false" data-k="hup">Hop de kangoeroe</button>
-    <button role="tab" id="tab-pip" aria-selected="false" data-k="pip">Pip de pinguïn (biped)</button>
+    <button role="tab" id="tab-biped" aria-selected="false" data-k="biped">Simpele biped (4 servo's)</button>
   </div>
 
   <div class="stage">
@@ -142,11 +142,11 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
     scene.background = new THREE.Color(css('--scene'));
     const set = (k, v) => { if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08 }); mats[k].color.set(v); };
     set('C001', css('--c001')); set('C044', css('--c044')); set('C046', css('--c046')); set('pla', css('--pla'));
-    for (const k of ['shell', 'skin1', 'skin1b', 'skin2', 'skin2b', 'skin3', 'skin3b', 'belly', 'sclera', 'blush', 'p_navy', 'p_white']) {
+    for (const k of ['shell', 'skin1', 'skin1b', 'skin2', 'skin2b', 'skin3', 'skin3b', 'belly', 'sclera', 'blush']) {
       if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.04, flatShading: true });
       mats[k].color.set(css('--' + k));
     }
-    for (const k of ['w_house', 'w_clev1', 'w_clev2', 'w_hub', 'w_beam', 'w_dot', 'k_house', 'k_clev', 'k_hub', 'k_disc', 'h_house', 'h_clev', 'h_hub', 'p_house', 'p_clev', 'p_orange']) {
+    for (const k of ['w_house', 'w_clev1', 'w_clev2', 'w_hub', 'w_beam', 'w_dot', 'k_house', 'k_clev', 'k_hub', 'k_disc', 'h_house', 'h_clev', 'h_hub', 'b_house', 'b_clev', 'b_hub', 'b_batt', 'b_pcb', 'b_imu']) {
       if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05 });
       mats[k].color.set(css('--' + k));
     }
@@ -464,61 +464,43 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         setLids(this.lids, blink(t, 3.6, 2.0));
       }
     },
-    pip: {
-      cam: [600, 360, 440], target: [10, 160, 0],
-      text: `<h2>Pip de pinguïn</h2><p>De biped uit het oorspronkelijke plan, met vier servo's: per been een C044 in de heup en een C046 in de enkel. Een ronde navy-blauwe pinguïn met witte buik, oranje snavel en zwemvliesvoeten, die waggelend loopt door zijn gewicht van been naar been te verplaatsen.</p>
-        <h3>Waarom dit goed past</h3><ul><li>Links en rechts zijn precies gelijk: een C044-paar en een C046-paar. Daardoor kan RL de spiegeltruc gebruiken (wat links geleerd is, geldt rechts gespiegeld).</li><li>De heup draagt het lijf en heeft het meeste koppel nodig: daar zit de sterkere C044.</li><li>Beide types zijn al gemeten en gefit (C044 en C046, ±0,6° in MuJoCo).</li></ul>
-        <h3>Let op</h3><ul><li>Zonder heup-roll kan hij niet zijwaarts kantelen: lopen wordt waggelen en schuifelen, zoals een echte pinguïn.</li><li>Brede, platte voeten en een laag zwaartepunt houden hem overeind.</li></ul>`,
+    biped: {
+      cam: [380, 240, 330], target: [0, 100, 0],
+      text: `<h2>Simpele biped</h2><p>Een kale biped die zo makkelijk mogelijk precies te simuleren is. Vier servo's: per been een C044 in de heup en een C046 in de enkel, allebei rond de dwarse as. Alle onderdelen zijn rechte, massieve blokken, zodat je massa, zwaartepunt en traagheid in MuJoCo exact kunt invullen.</p>
+        <h3>Waarom dit goed werkt voor sim2real</h3><ul>
+          <li><b>Alleen rechthoekige blokken:</b> elk deel wegen, en je kent de traagheid met een formule. Geen ronde schillen of decoratie die je moet schatten.</li>
+          <li><b>Perfect symmetrisch:</b> een C044-paar en een C046-paar. In de sim spiegelbaar, en de spiegeltruc versnelt het RL-trainen.</li>
+          <li><b>Gemeten servo's:</b> C044 en C046 hebben een eigen BAM-model dat in MuJoCo op ongeveer 0,6° klopt.</li>
+          <li><b>Platte voet met 4 rubberen pootjes:</b> vier duidelijke contactpunten. Dat is makkelijker te simuleren dan een ronde of zachte voet.</li>
+          <li><b>Accu laag in het midden, IMU in het midden van het bekken:</b> laag zwaartepunt, en de IMU zit precies op een punt dat je in het model kunt aanwijzen.</li>
+          <li><b>Kort en stijf:</b> korte poten (heup tot enkel ongeveer 10 cm) buigen niet door en vallen minder hard.</li></ul>
+        <h3>Let op</h3><ul><li>Zonder heup-roll kan hij niet zijwaarts kantelen. Lopen wordt waggelen en schuifelen; brede voeten helpen.</li><li>Bouw hem precies zoals het model: elke afwijking (een kabel die ergens anders hangt, een zwaardere accu) moet in de MJCF terug te vinden zijn.</li></ul>`,
       map: [['Linkerheup', 'C044', 'Draagt het lijf, meeste koppel'], ['Rechterheup', 'C044', 'Gelijk paar met links'], ['Linkerenkel', 'C046', 'Licht, snelle balanscorrecties'], ['Rechterenkel', 'C046', 'Gelijk paar met links']],
       build(root) {
-        const torso = new THREE.Group(); torso.position.set(0, 168, 0); root.add(torso);
-        this.lids = []; this.wings = [];
-        PAL = { house: 'p_house', clev: 'p_clev', hub: 'p_orange', beam: 'p_clev' };
-        // hip bridge that holds both hip servos
-        rbox(torso, [92, 12, 128], [-14, 22, 0], 'p_house', 5);
-        // body: navy egg, white belly, head on top
-        poly(torso, new THREE.IcosahedronGeometry(76, 1), [-6, 100, 0], [0.95, 1.0, 1.0], 'p_navy');
-        poly(torso, new THREE.IcosahedronGeometry(62, 1), [26, 92, 0], [0.62, 0.95, 0.88], 'p_white');
-        const hg = new THREE.Group(); hg.position.set(12, 196, 0); torso.add(hg);
-        poly(hg, new THREE.IcosahedronGeometry(46, 1), [0, 0, 0], [1, 0.9, 1], 'p_navy');
-        poly(hg, new THREE.IcosahedronGeometry(34, 1), [18, -6, 0], [0.7, 0.75, 1], 'p_white');
-        eyeball(hg, [34, 10, 15], 12, 'p_navy', this.lids); eyeball(hg, [34, 10, -15], 12, 'p_navy', this.lids);
-        poly(hg, new THREE.ConeGeometry(10, 30, 5), [52, -6, 0], [1, 1, 0.8], 'p_orange', [0, 0, -Math.PI / 2]);
-        cheeks(hg, 40, -8, 24);
-        for (const k of [-1, 0, 1]) poly(hg, new THREE.ConeGeometry(5, 22, 4), [-6 + k * 8, 46, k * 6], [1, 1, 1], 'p_navy', [k * 0.3, 0, -0.3 + k * 0.1]);
-        // flippers
-        for (const s of [-1, 1]) {
-          const w = new THREE.Group(); w.position.set(-6, 122, s * 70); torso.add(w);
-          poly(w, new THREE.IcosahedronGeometry(30, 1), [0, -32, 0], [0.55, 1.3, 0.22], 'p_navy');
-          poly(w, new THREE.IcosahedronGeometry(10, 0), [0, -66, 0], [0.6, 1, 0.3], 'p_clev');
-          this.wings.push([w, s]);
-        }
-        // legs: hip C044 (pitch), ankle C046 (pitch); right leg mirrored
+        const pelvis = new THREE.Group(); pelvis.position.set(0, 132, 0); root.add(pelvis);
+        this.lids = [];
+        PAL = { house: 'b_house', clev: 'b_clev', hub: 'b_hub', beam: 'b_clev' };
+        // pelvis: one flat plate across both hip housings, with battery, controller and IMU on top
+        rbox(pelvis, [96, 10, 132], [-14, 20, 0], 'b_house', 3);
+        rbox(pelvis, [70, 22, 36], [-14, 38, 0], 'b_batt', 3);            // 2S LiPo, low and centred
+        box(pelvis, [56, 3, 40], [-14, 51, 0], 'b_pcb');                   // controller board
+        box(pelvis, [12, 4, 12], [-14, 54.5, 0], 'b_imu');                 // IMU at the centre of the pelvis
+        for (const s of [-1, 1]) rbox(pelvis, [8, 30, 132], [-14 + s * 44, 6, 0], 'b_house', 3);   // side stiffeners
         this.legs = [];
         for (const s of [1, -1]) {
           const fw = -s;
-          const hip = joint(torso, 'C044', [0, 0, s * 46], [[[1, 0, 0], 90 * s]], -90 * s);
-          const ank = next(hip.out, 'C046', 18, 0);
-          rbox(ank.out, [10, 52, 100], [CLEV + 3, MID, fw * 10], 'p_house', 5);
-          for (const k of [-1, 0, 1]) poly(ank.out, new THREE.ConeGeometry(9, 30, 4), [CLEV + 6, MID + k * 17, fw * 70], [0.45, 1, 1], 'p_orange', [fw * Math.PI / 2, 0, 0]);
-          poly(ank.out, new THREE.IcosahedronGeometry(15, 0), [CLEV + 6, MID, -fw * 42], [0.5, 1.4, 1.1], 'p_orange');
-          foot(ank.out, [CLEV + 11, MID - 18, fw * 34], 6); foot(ank.out, [CLEV + 11, MID + 18, fw * 34], 6);
-          foot(ank.out, [CLEV + 11, MID - 18, -fw * 30], 6); foot(ank.out, [CLEV + 11, MID + 18, -fw * 30], 6);
+          const hip = joint(pelvis, 'C044', [0, 0, s * 46], [[[1, 0, 0], 90 * s]], -90 * s);
+          const ank = next(hip.out, 'C046', 20, 0);
+          rbox(ank.out, [8, 64, 118], [CLEV + 2, MID, fw * 12], 'b_house', 3);   // flat foot plate
+          for (const a of [-1, 1]) for (const b of [-1, 1]) foot(ank.out, [CLEV + 9, MID + a * 24, fw * 12 + b * 50], 6);
           this.legs.push({ hip, ank, s });
         }
-        this.torso = torso; this.hg = hg;
+        this.pelvis = pelvis;
       },
       animate(t) {
-        const w = Math.sin(2.6 * t);
-        for (const { hip, ank, s } of this.legs) {
-          const a = 0.28 * w * s;               // left and right swing in opposite phase
-          hip.pivot.rotation.y = a; ank.pivot.rotation.y = -a;
-        }
-        this.torso.rotation.x = 0.07 * Math.sin(2.6 * t + Math.PI / 2);   // waddle: rock from leg to leg
-        this.torso.position.y = 168 + 3 * Math.abs(Math.sin(2.6 * t));
-        this.wings.forEach(([g, s]) => { g.rotation.x = s * (0.15 + 0.2 * Math.max(0, Math.sin(5.2 * t))); });
-        this.hg.rotation.y = 0.2 * Math.sin(0.8 * t);
-        setLids(this.lids, blink(t, 3.0, 0.7));
+        const w = Math.sin(2.4 * t);
+        for (const { hip, ank, s } of this.legs) { const a = 0.22 * w * s; hip.pivot.rotation.y = a; ank.pivot.rotation.y = -a; }
+        this.pelvis.rotation.x = 0.05 * Math.sin(2.4 * t + Math.PI / 2);
       }
     }
   };
