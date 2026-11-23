@@ -102,6 +102,25 @@ sin_time_square 8.3–16.6.
 - Bus timeouts happened twice, both during a hard 90° step at high current. The recorder now retries them.
   Electrical noise or a dip on the adapter is suspected but not shown.
 
+## Update: profile disabled permanently on this unit (2026-11-23)
+
+The profile was written to EEPROM on servo ID 2. Sequence: torque off, lock (55) = 0, then 85 = 0, then 41 = 0, then lock = 1.
+After that the RD6006 output was switched off for 3 s and on again.
+
+- Readback after the power cycle: 85 = 0, 41 = 0, 86 = 1, lock = 1, P/D = 32/32. The angle limits were back at the factory
+  828..3208, which confirms that the earlier RAM-only writes were not persisted.
+- Step test after the power cycle, with nothing written to 85/41 (`scripts/step_latency_probe.py`, +90° at P = 32):
+
+| | load > 0 | first encoder tick | 5° |
+|---|---:|---:|---:|
+| Before (85 = 254) | 12.0 ms | 49.6 ms | 105.1 ms |
+| After the EEPROM write and power cycle | 1.5 ms | 17.0 ms | 59.0 ms |
+| Rhoban reference (`brutal` kp 32, 5°) | | | 57 ms |
+
+So register 85 = 0 persists across power cycles and takes effect at power-up without a fresh write to 41 (this unit,
+firmware 3.10). **LeRobot writes 254 to 85 and 41 on every connect**, so after using LeRobot with this servo the profile is on again
+until power-off. Runtime code should read 85/41 back at startup and refuse to run on a mismatch.
+
 ## What this means for simulation (sim2real)
 
 The servo's behaviour depends on registers 85/41, so **the simulator has to model the same setting that
