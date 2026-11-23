@@ -27,7 +27,7 @@ All six servos of one SO-101 leader arm (Seeed kit SKU 114993667), each with the
 | 5 | 5 | C046 1:147 | 32.6 ms | [C046 unit 3](measurements/C046/20261123-165146-unit3-id5-noload-profile-off/README.md) |
 | 6 (gripper) | 6 | C046 1:147 | 32.6 ms | [C046 unit 2](measurements/C046/20261123-164605-unit2-id6-noload-profile-off/README.md) |
 
-First loaded runs: [C046 ID 5 with 281 g at 92 mm](measurements/C046/20261123-171452-id5-pendulum-281g/README.md) (16 runs plus manual hold and release tests). BAM fits have not been done yet. The earlier C044 runs in `measurements/C044/2026112*-horn-*` were made with a 5 V
+Loaded runs on the C046 (ID 5): [281 g at 92 mm](measurements/C046/20261123-171452-id5-pendulum-281g/README.md) and [450 g at 100 mm](measurements/C046/20261123-173924-id5-pendulum-450g/README.md), each with 16 runs plus manual hold and release tests. BAM fits have not been done yet. The earlier C044 runs in `measurements/C044/2026112*-horn-*` were made with a 5 V
 adapter, D = 32, the profile on and about 40 Hz logging, so they are not comparable with the runs above.
 
 ## Prints
