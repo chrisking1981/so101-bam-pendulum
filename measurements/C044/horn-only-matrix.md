@@ -13,3 +13,5 @@
 The full-frequency sweep has stopped on 4.8 V at P=4 and P=32 with the current nominal 5 V supply. Partial curves do not count toward completion.
 
 The abrupt step also stopped at P=4 on a 4.6 V / 162 raw current report. [Partial recording](20261123-114630-horn-step-sweep/README.md).
+
+[Voltage, current and angle around the three stops](horn-supply-diagnostic.md).
