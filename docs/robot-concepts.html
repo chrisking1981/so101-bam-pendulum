@@ -78,7 +78,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   <header>
     <div class="eyebrow">SO-101 leader-servo's · 1× C001 · 2× C044 · 3× C046</div>
     <h1>Drie robots uit zes verschillende servo's</h1>
-    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in geprinte behuizingen en U-beugels zoals bij de SO-101 (geel = PLA, gebroken wit = low-poly kop, voeten en staart). Sleep om te draaien, scroll of knijp om te zoomen.</p>
+    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in dikke geprinte houders met ronde naven en U-beugels, in de stijl van de SO-101 (geel = PLA, gebroken wit = low-poly kop, voeten en staart). Sleep om te draaien, scroll of knijp om te zoomen.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Robotconcept">
@@ -159,8 +159,8 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   const S = { L: 45.2, H: 35, W: 24.7, off: 11.1 };
   const BX = S.off - S.L / 2, BY = -2 - S.H / 2;           // body centre
   const MID = BY;                                         // centre line of a link (same height as body centre)
-  const CLEV = 33;                                        // horn axis -> U-bracket bridge
-  const BACK = S.L - S.off + 3.8;                         // horn axis -> back of the housing
+  const CLEV = 44;                                        // horn axis -> outer face of the U-bracket bridge
+  const BACK = S.L - S.off + 5;                           // horn axis -> back of the housing
   function box(parent, size, pos, mat, rot) {
     const m = new THREE.Mesh(new THREE.BoxGeometry(...size), mats[mat]); m.position.set(...pos);
     if (rot) m.rotation.set(...rot); parent.add(m); return m;
@@ -168,31 +168,57 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   function cyl(parent, r, h, pos, mat, seg = 28) {
     const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, h, seg), mats[mat]); m.position.set(...pos); parent.add(m); return m;
   }
+  // Rounded printed block (like the SO-101 parts): extruded rounded rectangle with a bevel on all edges.
+  const rgeo = {};
+  function rbox(parent, size, pos, mat = 'pla', r = 3, rot) {
+    const [lx, ly, lz] = size, key = size.join('x') + 'r' + r;
+    if (!rgeo[key]) {
+      const rr = Math.min(r, lx / 2 - 0.5, ly / 2 - 0.5, lz / 2 - 0.5), w = lx - 2 * rr, h = ly - 2 * rr;
+      const sh = new THREE.Shape();
+      const x0 = -w / 2, y0 = -h / 2, c = Math.min(rr, w / 2, h / 2) * 0.9;
+      sh.moveTo(x0 + c, y0); sh.lineTo(x0 + w - c, y0); sh.quadraticCurveTo(x0 + w, y0, x0 + w, y0 + c);
+      sh.lineTo(x0 + w, y0 + h - c); sh.quadraticCurveTo(x0 + w, y0 + h, x0 + w - c, y0 + h);
+      sh.lineTo(x0 + c, y0 + h); sh.quadraticCurveTo(x0, y0 + h, x0, y0 + h - c);
+      sh.lineTo(x0, y0 + c); sh.quadraticCurveTo(x0, y0, x0 + c, y0);
+      const g = new THREE.ExtrudeGeometry(sh, { depth: Math.max(0.1, lz - 2 * rr), bevelEnabled: true, bevelThickness: rr, bevelSize: rr, bevelSegments: 2, curveSegments: 3 });
+      g.center(); rgeo[key] = g;
+    }
+    const m = new THREE.Mesh(rgeo[key], mats[mat]); m.position.set(...pos); if (rot) m.rotation.set(...rot); parent.add(m); return m;
+  }
   // The servo itself: black case, colour band = type, aluminium horn with 4 screws, rear bearing boss, cable.
   function servo(parent, type) {
     box(parent, [S.L, S.H, S.W], [BX, BY, 0], 'case');
     box(parent, [S.L + 0.6, 7, S.W + 0.6], [BX, BY + 6, 0], type);
-    cyl(parent, 5, 3, [0, -1, 0], 'case', 20);              // spline collar
-    cyl(parent, 11, 4, [0, 0, 0], 'horn');                   // horn disc
-    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; cyl(parent, 1.4, 1.2, [7 * Math.cos(a), 2.4, 7 * Math.sin(a)], 'screw', 10); }
-    cyl(parent, 2.2, 1.2, [0, 2.4, 0], 'screw', 12);
-    cyl(parent, 4.5, 4, [0, -2 - S.H - 2, 0], 'horn', 20);   // rear bearing boss
+    cyl(parent, 5, 3, [0, -1, 0], 'case', 20);
+    cyl(parent, 11, 4, [0, 0, 0], 'horn');
+    cyl(parent, 4.5, 4, [0, -2 - S.H - 2, 0], 'horn', 20);
     box(parent, [10, 4, 7], [BX - S.L / 2 - 4, BY - 8, 0], 'cable');
   }
-  // Printed housing (part of the link the servo body belongs to): bottom, two side walls and a back wall.
+  // SO-101-style motor holder: thick rounded cradle (4 mm walls) with a rounded back, side ribs and screw bosses.
   function housing(parent) {
-    const w = 2.6, wallH = 13;
-    box(parent, [S.L + 2 * w, w, S.W + 2 * w], [BX, -2 - S.H - w / 2, 0], 'pla');
-    for (const s of [-1, 1]) box(parent, [S.L + 2 * w, wallH, w], [BX, -2 - S.H + wallH / 2, s * (S.W / 2 + w / 2)], 'pla');
-    box(parent, [w, wallH, S.W + 2 * w], [BX - S.L / 2 - w / 2, -2 - S.H + wallH / 2, 0], 'pla');
+    const w = 4, wallH = 24, yb = -2 - S.H;
+    rbox(parent, [S.L + 2 * w, w + 1, S.W + 2 * w], [BX, yb - (w + 1) / 2, 0], 'pla', 2);
+    for (const s of [-1, 1]) {
+      rbox(parent, [S.L + 2 * w, wallH, w], [BX, yb + wallH / 2, s * (S.W / 2 + w / 2)], 'pla', 1.6);
+      rbox(parent, [8, wallH + w, 3], [BX - 6, yb + wallH / 2 - w / 2, s * (S.W / 2 + w + 1.5)], 'pla', 1.2);   // rib
+      cyl(parent, 1.7, 1, [BX + 12, yb + 6, s * (S.W / 2 + w + 0.5)], 'screw', 10);
+      cyl(parent, 1.7, 1, [BX - 16, yb + 6, s * (S.W / 2 + w + 0.5)], 'screw', 10);
+    }
+    rbox(parent, [w + 2, wallH + w, S.W + 2 * w], [BX - S.L / 2 - w / 2 - 1, yb + wallH / 2 - w / 2, 0], 'pla', 2);
   }
-  // U-bracket on the output: top plate screwed to the horn, bottom plate on the bearing boss, bridge at CLEV.
+  // SO-101-style output bracket: thick rounded arms with a big round hub on both sides of the servo
+  // (top hub bolted to the horn, bottom hub on the rear bearing), joined by a solid bridge.
   function clevis(parent) {
-    const t = 3, top = 4.5, bot = -2 - S.H - 7, w = 24;
-    box(parent, [CLEV + 12, t, w], [(CLEV - 12) / 2, top, 0], 'pla');
-    box(parent, [CLEV + 12, t, w], [(CLEV - 12) / 2, bot, 0], 'pla');
-    box(parent, [t, top - bot + t, w], [CLEV, (top + bot) / 2, 0], 'pla');
-    cyl(parent, 12, t, [0, top, 0], 'pla'); cyl(parent, 12, t, [0, bot, 0], 'pla');
+    const t = 6, top = 2 + t / 2 + 0.5, bot = -2 - S.H - 5 - t / 2 - 2, w = 32, hubR = 19;
+    const armL = CLEV - 8;
+    for (const y of [top, bot]) {
+      cyl(parent, hubR, t, [0, y, 0], 'pla', 32);
+      rbox(parent, [armL, t, w], [armL / 2, y, 0], 'pla', 2.5);
+    }
+    rbox(parent, [10, top - bot + t, w], [CLEV - 5, (top + bot) / 2, 0], 'pla', 3);
+    for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; cyl(parent, 2, 1.4, [7 * Math.cos(a), top + t / 2 + 0.5, 7 * Math.sin(a)], 'screw', 10); }
+    cyl(parent, 2.8, 1.4, [0, top + t / 2 + 0.5, 0], 'screw', 12);
+    cyl(parent, 3, 1.4, [0, bot - t / 2 - 0.5, 0], 'screw', 12);
   }
   // One joint: frame placed in `parent` at `pos`, rotated by intrinsic steps [[axis, deg], ...].
   // Returns { pivot, out }: pivot turns about the horn axis; `out` is the U-bracket frame, turned by `dir`
@@ -209,11 +235,11 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   }
   // Next joint in a chain: a printed beam from the U-bracket to the back of the next housing (same orientation).
   function next(prevOut, type, gap, dir = 0) {
-    if (gap > 0) box(prevOut, [gap, 12, 20], [CLEV + gap / 2, MID, 0], 'pla');
+    if (gap > 0) rbox(prevOut, [gap + 6, 22, 28], [CLEV + gap / 2 - 3, MID, 0], 'pla', 4);
     return joint(prevOut, type, [CLEV + gap + BACK, 0, 0], [], dir);
   }
   // A beam from the U-bracket ending in a part; returns the end point (in out coordinates).
-  function beam(out, len, w = 20, h = 12) { box(out, [len, h, w], [CLEV + len / 2, MID, 0], 'pla'); return [CLEV + len, MID, 0]; }
+  function beam(out, len, w = 28, h = 22) { rbox(out, [len + 6, h, w], [CLEV + len / 2 - 3, MID, 0], 'pla', 4); return [CLEV + len, MID, 0]; }
   function foot(parent, p, r = 11) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mats.rubber); m.position.set(...p); m.scale.set(1, 1, 0.75); parent.add(m); return m; }
   // Low-poly parts: faceted shells for heads, toes and tails (flat shading, few faces).
   function poly(parent, geom, pos, scale = [1, 1, 1], mat = 'shell', rot) {
@@ -234,7 +260,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   const rad = d => d * Math.PI / 180;
   const concepts = {
     rups: {
-      cam: [200, 360, -440], target: [0, 20, 0],
+      cam: [260, 470, -620], target: [20, 20, 0],
       text: `<h2>Rups</h2><p>Zes servo's achter elkaar, elk in een geprinte behuizing die vastzit aan de U-beugel van de vorige, zoals de gewrichten van de SO-101. Alle assen liggen dwars, zodat hij golven door zijn lijf stuurt en zich zo vooruit duwt. De zware C001 zit in het midden, waar hij de meeste schakels moet optillen.</p>
         <h3>Waarom dit goed past</h3><ul><li>Kan niet omvallen: ideaal eerste RL-project.</li><li>Belasting loopt af van midden naar uiteinden, net als de servosterkte.</li><li>Bijna symmetrisch: C046–C044–C001–C044–C046, plus een C046 als kop.</li></ul>
         <h3>Let op</h3><ul><li>Grip op de grond bepaalt alles: rubber pootjes, en grondwrijving randomiseren in de simulatie.</li><li>Een schakel is ongeveer 72 mm; het hele lijf ongeveer 50 cm.</li></ul>`,
@@ -262,31 +288,31 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
       animate(t) { this.js.forEach((j, i) => { j.pivot.rotation.y = 0.38 * Math.sin(2.2 * t - i * 0.9); }); }
     },
     krab: {
-      cam: [360, 330, 360], target: [0, 110, 0],
+      cam: [470, 400, 470], target: [40, 120, 0],
       text: `<h2>Driepoot-krabbel</h2><p>Een rond lijf met drie identieke poten: je drie C046's zitten in behuizingen op de rand, 120° uit elkaar, met hun U-beugel als bovenbeen naar buiten en omlaag. Bovenop draait de C001 een arm van twee C044-gewrichten rond, als staart om gewicht te verplaatsen of zich af te duwen.</p>
         <h3>Waarom dit goed past</h3><ul><li>Drie gelijke C046-poten: rotatiesymmetrisch, elke poot doet hetzelfde.</li><li>De C001 draagt de hele arm, waar het meeste koppel nodig is.</li><li>RL kan zelf ontdekken hoe de arm helpt bij kantelen en voortbewegen.</li></ul>
         <h3>Let op</h3><ul><li>Eén gewricht per poot: de poten gaan alleen op en neer, lopen wordt een schuivend gestrompel.</li></ul>`,
       map: [['Poot 1, 2, 3', '3× C046', 'Gelijke poten, licht en snel'], ['Draaischijf bovenop', 'C001', 'Draagt de hele arm'], ['Arm schouder', 'C044', 'Tilt arm en gewicht'], ['Arm elleboog', 'C044', 'Tweede armdeel']],
       build(root) {
         const body = new THREE.Group(); body.position.set(0, 150, 0); root.add(body);
-        cyl(body, 78, 6, [0, 0, 0], 'pla', 48);
-        cyl(body, 78, 6, [0, -46, 0], 'pla', 48);
+        cyl(body, 80, 9, [0, 0, 0], 'pla', 48);
+        cyl(body, 80, 9, [0, -46, 0], 'pla', 48);
         poly(body, new THREE.CylinderGeometry(74, 82, 10, 9), [0, -54, 0], [1, 1, 1], 'shell');
-        for (const a of [30, 150, 270]) box(body, [8, 40, 8], [40 * Math.cos(rad(a)), -23, 40 * Math.sin(rad(a))], 'pla');
+        for (const a of [30, 150, 270]) rbox(body, [14, 40, 14], [40 * Math.cos(rad(a)), -23, 40 * Math.sin(rad(a))], 'pla', 3);
         const legs = [];
         for (const ang of [90, 210, 330]) {
           const yaw = new THREE.Group(); yaw.rotation.y = -rad(ang); body.add(yaw);
           const j = joint(yaw, 'C046', [62, -3, 0], [[[1, 0, 0], 90]], -55);
-          const e = beam(j.out, 95, 18, 10);
+          const e = beam(j.out, 92, 24, 18);
           poly(j.out, new THREE.ConeGeometry(10, 30, 5), [e[0] + 12, MID, 0], [1, 1, 1], 'shell', [0, 0, -Math.PI / 2]);
           poly(j.out, new THREE.IcosahedronGeometry(9, 0), [e[0], MID, 0], [1, 1, 1], 'shell');
           legs.push(j);
         }
         const top = joint(body, 'C001', [0, 3 + 2 + S.H + 2.6, 0], [], 0);
-        const shoulder = joint(top.out, 'C044', [CLEV + 4 + BACK, MID, -BY], [[[1, 0, 0], 90]], 0);
-        box(top.out, [4, 12, 20], [CLEV + 2, MID, 0], 'pla');
+        const shoulder = joint(top.out, 'C044', [CLEV + 6 + BACK, MID, -BY], [[[1, 0, 0], 90]], 0);
+        rbox(top.out, [10, 22, 28], [CLEV + 1, MID, 0], 'pla', 4);
         const elbow = next(shoulder.out, 'C044', 30);
-        const e = beam(elbow.out, 40, 22, 14);
+        const e = beam(elbow.out, 40);
         const hc = [e[0] + 22, MID, 0];
         poly(elbow.out, new THREE.DodecahedronGeometry(24, 0), hc, [1.2, 1, 1]);
         eyes(elbow.out, [hc[0] + 20, MID, 0], [0, 1, 0], [0, 0, -1], 10, 6, 5.5);
@@ -301,17 +327,18 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
       }
     },
     hup: {
-      cam: [340, 320, 520], target: [-10, 175, 0],
+      cam: [430, 380, 640], target: [-20, 170, 0],
       text: `<h2>Hupper met staart</h2><p>Eén been onder een romp, met een staart van drie gewrichten die zwaait voor balans, zoals een kangoeroe. Het been is gebouwd als een robotarm die omlaag hangt: elke servo zit in de behuizing van het deel erboven, met de U-beugel naar het volgende deel. Sterk bij de basis (C001 in de heup), lichter naar beneden (C044 knie, C046 enkel).</p>
         <h3>Waarom dit goed past</h3><ul><li>De heup draagt het hele lijf: daar zit de sterkste servo.</li><li>De staart heeft weinig last en moet snel zwaaien: C044 bij de romp, C046's naar het puntje.</li><li>Uitdagend RL-probleem: balanceren op één been met een staart als tegengewicht.</li></ul>
         <h3>Let op</h3><ul><li>Echt springen lukt waarschijnlijk niet met dit koppel; hinken en schuiven wel.</li><li>Valt makkelijk om: geef hem een brede voet.</li></ul>`,
       map: [['Heup', 'C001', 'Draagt romp en staart'], ['Knie', 'C044', 'Middelste belasting'], ['Enkel', 'C046', 'Licht deel, snelle correcties'], ['Staartbasis', 'C044', 'Zwaait de hele staart'], ['Staart midden', 'C046', 'Licht en snel'], ['Staartpunt', 'C046', 'Licht en snel, met gewichtje']],
       build(root) {
         const torso = new THREE.Group(); torso.position.set(0, 262, 0); root.add(torso);
-        box(torso, [120, 4, 66], [-30, 34, 0], 'pla');
-        box(torso, [120, 4, 66], [-30, -32, 0], 'pla');
-        for (const s of [-1, 1]) box(torso, [120, 66, 4], [-30, 1, s * 33], 'pla');
-        box(torso, [24, 30, 30], [40, 30, 0], 'pla');
+        rbox(torso, [128, 8, 76], [-30, 36, 0], 'pla', 4);
+        rbox(torso, [128, 8, 76], [-30, -34, 0], 'pla', 4);
+        for (const s of [-1, 1]) rbox(torso, [128, 74, 8], [-30, 1, s * 36], 'pla', 4);
+        rbox(torso, [8, 74, 76], [-92, 1, 0], 'pla', 4);
+        rbox(torso, [30, 30, 34], [42, 32, 0], 'pla', 5);
         const hd = [74, 52, 0];
         poly(torso, new THREE.DodecahedronGeometry(32, 0), hd, [1.15, 0.85, 0.95]);
         poly(torso, new THREE.ConeGeometry(10, 22, 4), [hd[0] + 40, hd[1] - 6, 0], [1, 0.6, 1], 'shell', [0, 0, -Math.PI / 2]);
@@ -320,12 +347,12 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         const hip = joint(torso, 'C001', [0, -30 - S.W / 2 - 3, 0], [[[1, 0, 0], 90]], -90);
         const knee = next(hip.out, 'C044', 22, 0);
         const ank = next(knee.out, 'C046', 18, 0);
-        box(ank.out, [6, 54, 104], [CLEV + 6, MID, 10], 'pla');
+        rbox(ank.out, [12, 60, 108], [CLEV + 4, MID, 6], 'pla', 5);
         poly(ank.out, new THREE.ConeGeometry(30, 34, 4), [CLEV + 6, MID, -58], [0.45, 1, 1], 'shell', [-Math.PI / 2, 0, 0]);
         poly(ank.out, new THREE.IcosahedronGeometry(16, 0), [CLEV + 6, MID, 64], [0.5, 1.4, 1], 'shell');
         foot(ank.out, [CLEV + 12, MID - 20, 40], 7); foot(ank.out, [CLEV + 12, MID + 20, 40], 7);
         foot(ank.out, [CLEV + 12, MID - 20, -30], 7); foot(ank.out, [CLEV + 12, MID + 20, -30], 7);
-        const t1 = joint(torso, 'C044', [-96, 10, 0], [[[1, 0, 0], 90]], 195);
+        const t1 = joint(torso, 'C044', [-104, 10, 0], [[[1, 0, 0], 90]], 195);
         const t2 = next(t1.out, 'C046', 14);
         const t3 = next(t2.out, 'C046', 10);
         const e = beam(t3.out, 36, 16, 10);
