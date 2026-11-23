@@ -11,5 +11,16 @@
   "added_payload_g": 0,
   "short_arm_mass_estimate_g": 13.2,
   "estimate_basis": "Short-arm-only Bambu Studio slice, 0.20 mm layers, 5 walls, 40% infill; 4415.38 mm of 1.75 mm filament; assumed PLA density 1.24 g/cm3. Excludes hardware; weigh the print before model fitting.",
-  "short_arm_mass_measured_g": null
+  "short_arm_mass_measured_g": 8.77,
+  "scale_resolution_g": 0.01,
+  "m3_screw_group_readings_g": [
+    0.46,
+    0.92,
+    1.37,
+    1.83
+  ],
+  "all_fasteners_measured_g": 4.54,
+  "m4_bolt_and_nut_by_difference_g": 2.71,
+  "arm_and_all_fasteners_measured_g": 13.31,
+  "horn_mass_measured_g": null
 }
