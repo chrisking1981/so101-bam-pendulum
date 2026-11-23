@@ -1,0 +1,11 @@
+{
+  "reference_member": "raw/2025-02-27_10h28m14.json",
+  "reference_url": "https://huggingface.co/buckets/Gregwar/bam_data/resolve/feetech_sts3215_raw.zip?download=true",
+  "reference_voltage": 7.4,
+  "reference_subtype": "not identified",
+  "mount": "metal horn only",
+  "id": 3,
+  "completed": [],
+  "stop": "AssertionError()",
+  "torque_final": 0
+}
