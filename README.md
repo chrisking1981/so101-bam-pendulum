@@ -3,6 +3,8 @@ A printable bench arm for measuring Feetech STS3215-C001 (1:345), C044 (1:191) a
 
 **Robot concepts that use all six leader servos (3D, open the HTML in a browser): [docs/robot-concepts.html](docs/robot-concepts.html).**
 
+**Simple 4-servo biped in MuJoCo with the fitted BAM servo models: [sim/biped](sim/biped/README.md).**
+
 **How to set up the simulation, based on these measurements: [docs/sim-setup-guide.md](docs/sim-setup-guide.md).**
 
 ## Findings so far (no load, 2026-11-23)

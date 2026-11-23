@@ -1,0 +1,106 @@
+<!--
+  Simple 4-servo biped for sim2real (STS3215: C044 hips, C046 ankles, both pitch about the lateral Y axis).
+  Units: metres, kilograms. X forward, Y left, Z up.
+  Every part is a box (or a sphere for the foot pads), so masses and inertias can be replaced 1:1 with weighed values.
+  Masses below are ESTIMATES until the real parts are weighed:
+    STS3215 servo 0.055 kg; printed holder 0.012 kg; 2S LiPo 0.060 kg; controller + IMU 0.015 kg.
+  The joints are driven by <motor> actuators. Torque comes from BAM (bam.mujoco.MujocoController) every step,
+  so do not add kp/damping/frictionloss/armature here: BAM sets damping, frictionloss and armature at runtime.
+-->
+<mujoco model="simple_biped">
+  <compiler angle="radian" autolimits="true"/>
+  <option timestep="0.001" integrator="implicitfast" gravity="0 0 -9.81"/>
+
+  <visual>
+    <headlight ambient="0.3 0.3 0.3" diffuse="0.45 0.45 0.45"/>
+    <global offwidth="1280" offheight="960"/>
+  </visual>
+
+  <default>
+    <!-- robot parts only collide with the floor (no self-collision) -->
+    <geom contype="2" conaffinity="1" condim="3" friction="0.8 0.005 0.0001"/>
+    <joint damping="0" frictionloss="0" armature="0"/>
+    <default class="servo"><geom type="box" rgba="0.14 0.15 0.16 1"/></default>
+    <default class="printed"><geom type="box" rgba="0.82 0.84 0.87 1"/></default>
+    <default class="bracket"><geom type="box" rgba="0.95 0.96 0.97 1"/></default>
+    <default class="pad"><geom type="sphere" size="0.006" rgba="0.15 0.15 0.15 1" friction="1.0 0.005 0.0001" condim="3"/></default>
+  </default>
+
+  <asset>
+    <texture name="grid" type="2d" builtin="checker" rgb1="0.93 0.94 0.92" rgb2="0.85 0.87 0.84" width="512" height="512"/>
+    <material name="grid" texture="grid" texrepeat="8 8" reflectance="0.05"/>
+  </asset>
+
+  <worldbody>
+    <light pos="0.4 -0.4 1.2" dir="-0.3 0.3 -1" diffuse="0.7 0.7 0.7"/>
+    <geom name="floor" type="plane" size="2 2 0.05" material="grid" contype="1" conaffinity="2" friction="1.0 0.005 0.0001"/>
+
+    <!-- pelvis origin = midpoint between the two hip axes -->
+    <body name="pelvis" pos="0 0 0.160">
+      <freejoint name="root"/>
+      <site name="imu" pos="-0.014 0 0.053" size="0.006" rgba="0.89 0.27 0.24 1"/>
+      <geom name="pelvis_plate" class="printed" pos="-0.014 0 0.020" size="0.048 0.066 0.005" mass="0.040"/>
+      <geom name="stiffener_f" class="printed" pos="0.030 0 0.006" size="0.004 0.066 0.015" mass="0.010"/>
+      <geom name="stiffener_b" class="printed" pos="-0.058 0 0.006" size="0.004 0.066 0.015" mass="0.010"/>
+      <geom name="battery" type="box" pos="-0.014 0 0.036" size="0.035 0.018 0.011" mass="0.060" rgba="0.17 0.18 0.21 1"/>
+      <geom name="controller" type="box" pos="-0.014 0 0.0485" size="0.028 0.020 0.0015" mass="0.012" rgba="0.12 0.48 0.30 1"/>
+      <geom name="imu_box" type="box" pos="-0.014 0 0.052" size="0.006 0.006 0.002" mass="0.003" rgba="0.89 0.27 0.24 1"/>
+      <!-- hip servos (C044) are fixed to the pelvis; body lies backwards from the horn axis, offset inwards -->
+      <geom name="hip_servo_L" class="servo" pos="-0.0115 0.0265 0" size="0.0226 0.0175 0.01235" mass="0.067"/>
+      <geom name="hip_servo_R" class="servo" pos="-0.0115 -0.0265 0" size="0.0226 0.0175 0.01235" mass="0.067"/>
+
+      <!-- LEFT LEG -->
+      <body name="leg_L" pos="0 0.046 0">
+        <joint name="hip_L" type="hinge" axis="0 1 0" range="-1.57 1.57"/>
+        <geom name="bracket_hip_L" class="bracket" pos="0 0 -0.030" size="0.016 0.020 0.030" mass="0.020"/>
+        <geom name="shin_L" class="bracket" pos="0 0 -0.062" size="0.014 0.016 0.010" mass="0.010"/>
+        <!-- ankle servo (C046) fixed to the shin, body upwards from the ankle axis, offset inwards -->
+        <geom name="ankle_servo_L" class="servo" pos="0 -0.0195 -0.0905" size="0.01235 0.0175 0.0226" mass="0.067"/>
+        <body name="foot_L" pos="0 0 -0.102">
+          <joint name="ankle_L" type="hinge" axis="0 1 0" range="-1.4 1.4"/>
+          <geom name="bracket_ankle_L" class="bracket" pos="0 0 -0.022" size="0.016 0.016 0.020" mass="0.015"/>
+          <geom name="sole_L" class="printed" pos="0.012 0 -0.046" size="0.059 0.032 0.004" mass="0.030"/>
+          <geom name="pad_L_fl" class="pad" pos="0.062 0.024 -0.052" mass="0.002"/>
+          <geom name="pad_L_fr" class="pad" pos="0.062 -0.024 -0.052" mass="0.002"/>
+          <geom name="pad_L_bl" class="pad" pos="-0.038 0.024 -0.052" mass="0.002"/>
+          <geom name="pad_L_br" class="pad" pos="-0.038 -0.024 -0.052" mass="0.002"/>
+        </body>
+      </body>
+
+      <!-- RIGHT LEG (mirror of the left) -->
+      <body name="leg_R" pos="0 -0.046 0">
+        <joint name="hip_R" type="hinge" axis="0 1 0" range="-1.57 1.57"/>
+        <geom name="bracket_hip_R" class="bracket" pos="0 0 -0.030" size="0.016 0.020 0.030" mass="0.020"/>
+        <geom name="shin_R" class="bracket" pos="0 0 -0.062" size="0.014 0.016 0.010" mass="0.010"/>
+        <geom name="ankle_servo_R" class="servo" pos="0 0.0195 -0.0905" size="0.01235 0.0175 0.0226" mass="0.067"/>
+        <body name="foot_R" pos="0 0 -0.102">
+          <joint name="ankle_R" type="hinge" axis="0 1 0" range="-1.4 1.4"/>
+          <geom name="bracket_ankle_R" class="bracket" pos="0 0 -0.022" size="0.016 0.016 0.020" mass="0.015"/>
+          <geom name="sole_R" class="printed" pos="0.012 0 -0.046" size="0.059 0.032 0.004" mass="0.030"/>
+          <geom name="pad_R_fl" class="pad" pos="0.062 0.024 -0.052" mass="0.002"/>
+          <geom name="pad_R_fr" class="pad" pos="0.062 -0.024 -0.052" mass="0.002"/>
+          <geom name="pad_R_bl" class="pad" pos="-0.038 0.024 -0.052" mass="0.002"/>
+          <geom name="pad_R_br" class="pad" pos="-0.038 -0.024 -0.052" mass="0.002"/>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+
+  <actuator>
+    <!-- plain torque motors: BAM computes the STS3215 firmware P-controller, motor and friction -->
+    <motor name="hip_L" joint="hip_L" gear="1"/>
+    <motor name="hip_R" joint="hip_R" gear="1"/>
+    <motor name="ankle_L" joint="ankle_L" gear="1"/>
+    <motor name="ankle_R" joint="ankle_R" gear="1"/>
+  </actuator>
+
+  <sensor>
+    <framequat name="imu_quat" objtype="site" objname="imu"/>
+    <gyro name="imu_gyro" site="imu"/>
+    <accelerometer name="imu_acc" site="imu"/>
+    <jointpos name="q_hip_L" joint="hip_L"/>
+    <jointpos name="q_hip_R" joint="hip_R"/>
+    <jointpos name="q_ankle_L" joint="ankle_L"/>
+    <jointpos name="q_ankle_R" joint="ankle_R"/>
+  </sensor>
+</mujoco>
