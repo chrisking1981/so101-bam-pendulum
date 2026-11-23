@@ -17,6 +17,7 @@
   --c044: #14907a;
   --c046: #d65a2f;
   --pla: #f0c23a;
+  --shell: #ece7dc;      /* tweede printkleur voor kop en voeten */
   --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
@@ -24,11 +25,11 @@
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
   --bg: #141716; --panel: #1c201e; --fg: #e9ece8; --muted: #9aa39e; --line: #2e3431;
   --accent: #e6b53c; --scene: #191d1b; --grid: #343b37;
-  --c001: #5b84ef; --c044: #2fbfa2; --c046: #ee7a50; --pla: #e9b92f; color-scheme: dark } }
+  --c001: #5b84ef; --c044: #2fbfa2; --c046: #ee7a50; --pla: #e9b92f; --shell: #d9d3c6; color-scheme: dark } }
 :root[data-theme="dark"] {
   --bg: #141716; --panel: #1c201e; --fg: #e9ece8; --muted: #9aa39e; --line: #2e3431;
   --accent: #e6b53c; --scene: #191d1b; --grid: #343b37;
-  --c001: #5b84ef; --c044: #2fbfa2; --c046: #ee7a50; --pla: #e9b92f; color-scheme: dark }
+  --c001: #5b84ef; --c044: #2fbfa2; --c046: #ee7a50; --pla: #e9b92f; --shell: #d9d3c6; color-scheme: dark }
 
 body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.55; }
 .wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 48px;
@@ -77,7 +78,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   <header>
     <div class="eyebrow">SO-101 leader-servo's · 1× C001 · 2× C044 · 3× C046</div>
     <h1>Drie robots uit zes verschillende servo's</h1>
-    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in geprinte behuizingen en U-beugels zoals bij de SO-101 (geel = PLA). Sleep om te draaien, scroll of knijp om te zoomen.</p>
+    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in geprinte behuizingen en U-beugels zoals bij de SO-101 (geel = PLA, gebroken wit = low-poly kop, voeten en staart). Sleep om te draaien, scroll of knijp om te zoomen.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Robotconcept">
@@ -94,6 +95,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         <span><i class="sw" style="background:var(--c044)"></i>C044 1:191</span>
         <span><i class="sw" style="background:var(--c046)"></i>C046 1:147</span>
         <span><i class="sw" style="background:var(--pla)"></i>PLA</span>
+        <span><i class="sw" style="background:var(--shell)"></i>low-poly</span>
       </div>
       <div class="ctl"><button id="play" type="button">Pauzeer beweging</button><span class="hint">sleep = draaien</span></div>
     </div>
@@ -132,8 +134,12 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
     scene.background = new THREE.Color(css('--scene'));
     const set = (k, v) => { if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08 }); mats[k].color.set(v); };
     set('C001', css('--c001')); set('C044', css('--c044')); set('C046', css('--c046')); set('pla', css('--pla'));
+    if (!mats.shell) mats.shell = new THREE.MeshStandardMaterial({ roughness: 0.6, metalness: 0.05, flatShading: true });
+    mats.shell.color.set(css('--shell'));
+    if (!mats.eye) mats.eye = new THREE.MeshStandardMaterial({ color: 0x141618, roughness: 0.25, metalness: 0.2, flatShading: true });
+    if (!mats.glint) mats.glint = new THREE.MeshStandardMaterial({ color: 0xffffff, emissive: 0xffffff, emissiveIntensity: 0.6 });
     if (!mats.horn) mats.horn = new THREE.MeshStandardMaterial({ color: 0xb9bdc2, roughness: 0.3, metalness: 0.8 });
-    if (!mats.rubber) mats.rubber = new THREE.MeshStandardMaterial({ color: 0x2a2d2c, roughness: 0.9 });
+    if (!mats.rubber) mats.rubber = new THREE.MeshStandardMaterial({ color: 0x2a2d2c, roughness: 0.9, flatShading: true });
     if (!mats.case) mats.case = new THREE.MeshStandardMaterial({ color: 0x24272a, roughness: 0.45, metalness: 0.1 });
     if (!mats.screw) mats.screw = new THREE.MeshStandardMaterial({ color: 0x6d7278, roughness: 0.35, metalness: 0.9 });
     if (!mats.cable) mats.cable = new THREE.MeshStandardMaterial({ color: 0x3a3d40, roughness: 0.8 });
@@ -208,7 +214,21 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   }
   // A beam from the U-bracket ending in a part; returns the end point (in out coordinates).
   function beam(out, len, w = 20, h = 12) { box(out, [len, h, w], [CLEV + len / 2, MID, 0], 'pla'); return [CLEV + len, MID, 0]; }
-  function foot(parent, p, r = 11) { const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), mats.rubber); m.position.set(...p); parent.add(m); return m; }
+  function foot(parent, p, r = 11) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mats.rubber); m.position.set(...p); m.scale.set(1, 1, 0.75); parent.add(m); return m; }
+  // Low-poly parts: faceted shells for heads, toes and tails (flat shading, few faces).
+  function poly(parent, geom, pos, scale = [1, 1, 1], mat = 'shell', rot) {
+    const m = new THREE.Mesh(geom, mats[mat]); m.position.set(...pos); m.scale.set(...scale);
+    if (rot) m.rotation.set(...rot); parent.add(m); return m;
+  }
+  // Two eyes on the +X face of a head at `c`; `side` is the axis the eyes are spread along, `up` the up direction.
+  function eyes(parent, c, side, up, spread = 10, lift = 6, r = 5) {
+    for (const k of [-1, 1]) {
+      const p = new THREE.Vector3(...c).add(new THREE.Vector3(...side).multiplyScalar(k * spread)).add(new THREE.Vector3(...up).multiplyScalar(lift));
+      poly(parent, new THREE.IcosahedronGeometry(r, 0), p.toArray(), [0.7, 1, 1], 'eye');
+      const g = new THREE.Vector3(...up).multiplyScalar(r * 0.45).add(new THREE.Vector3(r * 0.5, 0, 0));
+      poly(parent, new THREE.IcosahedronGeometry(r * 0.28, 0), p.clone().add(g).toArray(), [1, 1, 1], 'glint');
+    }
+  }
 
   // --- concepts ---
   const rad = d => d * Math.PI / 180;
@@ -223,10 +243,20 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         const types = ['C046', 'C044', 'C001', 'C044', 'C046', 'C046'];
         const base = new THREE.Group(); base.position.set(-210, 16, 0); root.add(base);
         let j = joint(base, types[0], [0, 0, 0], [[[1, 0, 0], 90]]);
-        box(j.frame, [26, 10, 20], [-BACK - 13, MID, 0], 'pla'); foot(j.frame, [-BACK - 24, MID, 9], 9);
+        poly(j.frame, new THREE.ConeGeometry(13, 40, 5), [-BACK - 20, MID, 0], [1, 1, 1], 'shell', [0, 0, Math.PI / 2]);
+        foot(j.frame, [-BACK - 8, MID, 14], 8);
         const js = [j];
         for (let i = 1; i < types.length; i++) { j = next(j.out, types[i], 4); js.push(j); }
-        const tip = beam(j.out, 30); foot(j.out, [tip[0] + 4, MID, 9], 9);
+        const tip = beam(j.out, 14);
+        const hc = [tip[0] + 26, MID, -6];
+        poly(j.out, new THREE.IcosahedronGeometry(26, 0), hc, [1.35, 1.05, 0.9]);
+        poly(j.out, new THREE.ConeGeometry(9, 16, 4), [hc[0] + 34, MID, -2], [1, 1, 0.6], 'shell', [0, 0, -Math.PI / 2]);
+        eyes(j.out, [hc[0] + 24, MID, hc[2]], [0, 1, 0], [0, 0, -1], 11, 8, 6);
+        for (const k of [-1, 1]) {
+          poly(j.out, new THREE.CylinderGeometry(1.6, 1.6, 34, 5), [hc[0] + 6, MID + k * 9, hc[2] - 34], [1, 1, 1], 'shell', [Math.PI / 2 + k * 0.25, 0, 0]);
+          poly(j.out, new THREE.IcosahedronGeometry(5, 0), [hc[0] + 6, MID + k * 13, hc[2] - 51], [1, 1, 1], 'C046');
+        }
+        foot(j.out, [hc[0] - 6, MID, 22], 9);
         this.js = js;
       },
       animate(t) { this.js.forEach((j, i) => { j.pivot.rotation.y = 0.38 * Math.sin(2.2 * t - i * 0.9); }); }
@@ -241,12 +271,15 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         const body = new THREE.Group(); body.position.set(0, 150, 0); root.add(body);
         cyl(body, 78, 6, [0, 0, 0], 'pla', 48);
         cyl(body, 78, 6, [0, -46, 0], 'pla', 48);
+        poly(body, new THREE.CylinderGeometry(74, 82, 10, 9), [0, -54, 0], [1, 1, 1], 'shell');
         for (const a of [30, 150, 270]) box(body, [8, 40, 8], [40 * Math.cos(rad(a)), -23, 40 * Math.sin(rad(a))], 'pla');
         const legs = [];
         for (const ang of [90, 210, 330]) {
           const yaw = new THREE.Group(); yaw.rotation.y = -rad(ang); body.add(yaw);
           const j = joint(yaw, 'C046', [62, -3, 0], [[[1, 0, 0], 90]], -55);
-          const e = beam(j.out, 95, 18, 10); foot(j.out, [e[0] + 6, MID, 0], 10);
+          const e = beam(j.out, 95, 18, 10);
+          poly(j.out, new THREE.ConeGeometry(10, 30, 5), [e[0] + 12, MID, 0], [1, 1, 1], 'shell', [0, 0, -Math.PI / 2]);
+          poly(j.out, new THREE.IcosahedronGeometry(9, 0), [e[0], MID, 0], [1, 1, 1], 'shell');
           legs.push(j);
         }
         const top = joint(body, 'C001', [0, 3 + 2 + S.H + 2.6, 0], [], 0);
@@ -254,7 +287,10 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         box(top.out, [4, 12, 20], [CLEV + 2, MID, 0], 'pla');
         const elbow = next(shoulder.out, 'C044', 30);
         const e = beam(elbow.out, 40, 22, 14);
-        box(elbow.out, [24, 24, 24], [e[0] + 10, MID, 0], 'horn');
+        const hc = [e[0] + 22, MID, 0];
+        poly(elbow.out, new THREE.DodecahedronGeometry(24, 0), hc, [1.2, 1, 1]);
+        eyes(elbow.out, [hc[0] + 20, MID, 0], [0, 1, 0], [0, 0, -1], 10, 6, 5.5);
+        for (const k of [-1, 1]) poly(elbow.out, new THREE.ConeGeometry(6, 18, 4), [hc[0] + 6, MID + k * 18, -20], [1, 1, 1], 'shell', [0, 0, 0]);
         this.legs = legs; this.top = top; this.sh = shoulder; this.el = elbow;
       },
       animate(t) {
@@ -265,7 +301,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
       }
     },
     hup: {
-      cam: [300, 260, 460], target: [-30, 150, 0],
+      cam: [340, 320, 520], target: [-10, 175, 0],
       text: `<h2>Hupper met staart</h2><p>Eén been onder een romp, met een staart van drie gewrichten die zwaait voor balans, zoals een kangoeroe. Het been is gebouwd als een robotarm die omlaag hangt: elke servo zit in de behuizing van het deel erboven, met de U-beugel naar het volgende deel. Sterk bij de basis (C001 in de heup), lichter naar beneden (C044 knie, C046 enkel).</p>
         <h3>Waarom dit goed past</h3><ul><li>De heup draagt het hele lijf: daar zit de sterkste servo.</li><li>De staart heeft weinig last en moet snel zwaaien: C044 bij de romp, C046's naar het puntje.</li><li>Uitdagend RL-probleem: balanceren op één been met een staart als tegengewicht.</li></ul>
         <h3>Let op</h3><ul><li>Echt springen lukt waarschijnlijk niet met dit koppel; hinken en schuiven wel.</li><li>Valt makkelijk om: geef hem een brede voet.</li></ul>`,
@@ -275,17 +311,26 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         box(torso, [120, 4, 66], [-30, 34, 0], 'pla');
         box(torso, [120, 4, 66], [-30, -32, 0], 'pla');
         for (const s of [-1, 1]) box(torso, [120, 66, 4], [-30, 1, s * 33], 'pla');
+        box(torso, [24, 30, 30], [40, 30, 0], 'pla');
+        const hd = [74, 52, 0];
+        poly(torso, new THREE.DodecahedronGeometry(32, 0), hd, [1.15, 0.85, 0.95]);
+        poly(torso, new THREE.ConeGeometry(10, 22, 4), [hd[0] + 40, hd[1] - 6, 0], [1, 0.6, 1], 'shell', [0, 0, -Math.PI / 2]);
+        eyes(torso, [hd[0] + 30, hd[1], 0], [0, 0, 1], [0, 1, 0], 12, 6, 6.5);
+        for (const k of [-1, 1]) poly(torso, new THREE.ConeGeometry(7, 22, 4), [hd[0] - 10, hd[1] + 30, k * 16], [1, 1, 1], 'shell', [k * 0.35, 0, 0.2]);
         const hip = joint(torso, 'C001', [0, -30 - S.W / 2 - 3, 0], [[[1, 0, 0], 90]], -90);
         const knee = next(hip.out, 'C044', 22, 0);
         const ank = next(knee.out, 'C046', 18, 0);
         box(ank.out, [6, 54, 104], [CLEV + 6, MID, 10], 'pla');
-        foot(ank.out, [CLEV + 12, MID - 20, 52], 7); foot(ank.out, [CLEV + 12, MID + 20, 52], 7);
-        foot(ank.out, [CLEV + 12, MID - 20, -32], 7); foot(ank.out, [CLEV + 12, MID + 20, -32], 7);
+        poly(ank.out, new THREE.ConeGeometry(30, 34, 4), [CLEV + 6, MID, -58], [0.45, 1, 1], 'shell', [-Math.PI / 2, 0, 0]);
+        poly(ank.out, new THREE.IcosahedronGeometry(16, 0), [CLEV + 6, MID, 64], [0.5, 1.4, 1], 'shell');
+        foot(ank.out, [CLEV + 12, MID - 20, 40], 7); foot(ank.out, [CLEV + 12, MID + 20, 40], 7);
+        foot(ank.out, [CLEV + 12, MID - 20, -30], 7); foot(ank.out, [CLEV + 12, MID + 20, -30], 7);
         const t1 = joint(torso, 'C044', [-96, 10, 0], [[[1, 0, 0], 90]], 195);
         const t2 = next(t1.out, 'C046', 14);
         const t3 = next(t2.out, 'C046', 10);
         const e = beam(t3.out, 36, 16, 10);
-        const w = new THREE.Mesh(new THREE.SphereGeometry(14, 20, 14), mats.horn); w.position.set(e[0] + 8, MID, 0); t3.out.add(w);
+        poly(t3.out, new THREE.IcosahedronGeometry(15, 0), [e[0] + 8, MID, 0], [1.3, 1, 1]);
+        poly(t3.out, new THREE.ConeGeometry(9, 26, 5), [e[0] + 30, MID, 0], [1, 1, 1], 'shell', [0, 0, -Math.PI / 2]);
         this.j = { hip, knee, ank, t1, t2, t3 };
       },
       animate(t) {
