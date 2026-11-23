@@ -3,16 +3,16 @@ A printable bench arm for measuring Feetech STS3215-C001 (1:345), C044 (1:191) a
 
 ## Findings so far (no load, 2026-11-23)
 
-Five leader-arm servos were measured (C001, two C044 units and two C046 units), each with only the metal horn attached and at 7.40 V. Each one replayed the exact
+Six leader-arm servos were measured (C001, two C044 units and three C046 units), each with only the metal horn attached and at 7.40 V. Each one replayed the exact
 command sequences of [Rhoban's public BAM STS3215 data](https://huggingface.co/buckets/Gregwar/bam_data) (20 no-load logs).
 
 | Finding | Result | Details |
 |---|---|---|
-| Hidden firmware acceleration profile (register 85) | Adds about 35–50 ms of start-up delay to every move. It was on (85 = 254) on all five servos as received. Disabling it (85 = 0, then 41 = 0) works, and once stored in EEPROM it survives a power cycle. Toggling it in RAM before each run proved unreliable | [C001](measurements/C001/README.md) |
+| Hidden firmware acceleration profile (register 85) | Adds about 35–50 ms of start-up delay to every move. It was on (85 = 254) on all six servos as received. Disabling it (85 = 0, then 41 = 0) works, and once stored in EEPROM it survives a power cycle. Toggling it in RAM before each run proved unreliable | [C001](measurements/C001/README.md) |
 | C001 (1:345) vs Rhoban's STS3215 | With the profile off, mean trace difference 0.74° over 20 runs. Our unit tracks about 5% worse. Rhoban's unit was most likely a C001 with the profile off | [Table](measurements/C001/final-noload-comparison.md) |
 | C044 (1:191) vs C001 (1:345) | Without load the C044 has about 35–40% less lag, peaks about 1.6× faster in a step (about 520 vs 320 °/s) and overshoots more. Rhoban's 1:345 model does not fit a C044 | [C044](measurements/C044/20261123-161907-noload-profile-off/README.md) |
 | C046 (1:147) vs C044 and C001 | The order holds in every run: lower gearing gives less lag, a faster step (C046 about 660 °/s) and more overshoot (8° at kp 32). The C046 has about 15–20% less lag than the C044 and about half that of the C001 | [C046](measurements/C046/20261123-163853-noload-profile-off/README.md) |
-| Unit-to-unit spread, same kit | Two C044 units: 0.27° mean trace difference, about 3% in tracking error. Two C046 units: 0.48°, about 8.5%; the gripper servo is the slower one | [C044 units](measurements/C044/20261123-163134-unit2-id1-noload-profile-off/README.md), [C046 units](measurements/C046/20261123-164605-unit2-id6-noload-profile-off/README.md) |
+| Unit-to-unit spread, same kit | Two C044 units: 0.27° mean trace difference, about 3% in tracking error. Three C046 units: 0.26–0.48° between pairs, up to about 9%; the gripper servo is the slowest | [C044 units](measurements/C044/20261123-163134-unit2-id1-noload-profile-off/README.md), [C046 units](measurements/C046/20261123-165146-unit3-id5-noload-profile-off/README.md) |
 | USB hub, bus latency | Not a factor. Round trip 0.34 ms, and the servo flags *moving* 1.5 ms after a goal write | [C001](measurements/C001/README.md#finding-1-the-extra-delay-comes-from-the-servo-firmware-not-from-usb) |
 | Servo voltage register | Unreliable: it reads about 0.3 V low at idle and spikes to 17.8 V during motion. Do not use it as a guard | [C001](measurements/C001/README.md) |
 
