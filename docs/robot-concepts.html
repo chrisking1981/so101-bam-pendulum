@@ -1,0 +1,308 @@
+<title>STS3215 Robotconcepten</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: werkbank-pagina — tabbalk met de drie concepten, één 3D-venster, eronder de servoverdeling en de motivatie. */
+:root {
+  --bg: #f3f4f1;
+  --panel: #ffffff;
+  --fg: #1c211f;
+  --muted: #5d6662;
+  --line: #d9ddd8;
+  --accent: #c9961a;      /* geel PLA, zoals de geprinte pendelarm */
+  --scene: #e9ebe6;
+  --grid: #c6cbc4;
+  --c001: #2f5fd0;
+  --c044: #14907a;
+  --c046: #d65a2f;
+  --pla: #f0c23a;
+  --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #141716; --panel: #1c201e; --fg: #e9ece8; --muted: #9aa39e; --line: #2e3431;
+  --accent: #e6b53c; --scene: #191d1b; --grid: #343b37;
+  --c001: #5b84ef; --c044: #2fbfa2; --c046: #ee7a50; --pla: #e9b92f; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #141716; --panel: #1c201e; --fg: #e9ece8; --muted: #9aa39e; --line: #2e3431;
+  --accent: #e6b53c; --scene: #191d1b; --grid: #343b37;
+  --c001: #5b84ef; --c044: #2fbfa2; --c046: #ee7a50; --pla: #e9b92f; color-scheme: dark }
+
+body { background: var(--bg); color: var(--fg); font-family: var(--font-body); line-height: 1.55; }
+.wrap { max-width: 1080px; margin: 0 auto; padding-block: 28px 48px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 20px; }
+header { display: grid; gap: 6px; }
+h1 { font-family: var(--font-display); font-weight: 700; font-size: clamp(1.6rem, 3.4vw, 2.3rem); margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.lede { margin: 0; color: var(--muted); max-width: 68ch; }
+.eyebrow { font-family: var(--font-mono); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); }
+
+.tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.tabs button { font: 500 .95rem var(--font-body); color: var(--fg); background: var(--panel);
+  border: 1px solid var(--line); border-radius: 999px; padding: 8px 16px; cursor: pointer; }
+.tabs button[aria-selected="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tabs button:focus-visible, .ctl button:focus-visible, .ctl input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.stage { position: relative; background: var(--scene); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.stage canvas { display: block; width: 100%; height: clamp(320px, 58vh, 560px); touch-action: none; }
+.hud { position: absolute; left: 12px; bottom: 10px; right: 12px; display: flex; flex-wrap: wrap; gap: 10px 16px;
+  align-items: center; justify-content: space-between; pointer-events: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 12px; font: 500 .8rem var(--font-mono); background: color-mix(in srgb, var(--panel) 85%, transparent);
+  padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.sw { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+.ctl { pointer-events: auto; display: flex; gap: 8px; align-items: center; background: color-mix(in srgb, var(--panel) 85%, transparent);
+  padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line); font-size: .85rem; }
+.ctl button { font: 500 .85rem var(--font-body); color: var(--fg); background: transparent; border: 1px solid var(--line); border-radius: 6px; padding: 4px 10px; cursor: pointer; }
+.hint { font-size: .8rem; color: var(--muted); }
+
+.detail { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: 20px; }
+@media (max-width: 760px) { .detail { grid-template-columns: minmax(0, 1fr); } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; min-width: 0; }
+.card h2 { font-family: var(--font-display); font-size: 1.25rem; margin: 0 0 6px; }
+.card h3 { font-family: var(--font-display); font-size: 1rem; margin: 16px 0 6px; }
+.card p { margin: 0 0 10px; max-width: 65ch; }
+.card ul { margin: 0; padding-left: 1.1em; display: grid; gap: 4px; }
+table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+th, td { text-align: left; padding: 7px 6px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font: 500 .72rem var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
+.foot { font-size: .82rem; color: var(--muted); max-width: 80ch; }
+@media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">SO-101 leader-servo's · 1× C001 · 2× C044 · 3× C046</div>
+    <h1>Drie robots uit zes verschillende servo's</h1>
+    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Kleur = servotype, gele delen = geprinte PLA-onderdelen. Sleep om te draaien, scroll of knijp om te zoomen.</p>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Robotconcept">
+    <button role="tab" id="tab-rups" aria-selected="true" data-k="rups">1 · Rups</button>
+    <button role="tab" id="tab-krab" aria-selected="false" data-k="krab">2 · Driepoot-krabbel</button>
+    <button role="tab" id="tab-hup" aria-selected="false" data-k="hup">3 · Hupper met staart</button>
+  </div>
+
+  <div class="stage">
+    <canvas id="c" aria-label="3D-model van het gekozen robotconcept"></canvas>
+    <div class="hud">
+      <div class="legend" aria-label="Legenda servotypes">
+        <span><i class="sw" style="background:var(--c001)"></i>C001 1:345</span>
+        <span><i class="sw" style="background:var(--c044)"></i>C044 1:191</span>
+        <span><i class="sw" style="background:var(--c046)"></i>C046 1:147</span>
+        <span><i class="sw" style="background:var(--pla)"></i>PLA</span>
+      </div>
+      <div class="ctl"><button id="play" type="button">Pauzeer beweging</button><span class="hint">sleep = draaien</span></div>
+    </div>
+  </div>
+
+  <div class="detail">
+    <article class="card" id="info"></article>
+    <aside class="card">
+      <h2>Servoverdeling</h2>
+      <table><thead><tr><th>Plek</th><th>Servo</th><th>Waarom</th></tr></thead><tbody id="map"></tbody></table>
+    </aside>
+  </div>
+
+  <p class="foot">Servomaten op schaal (STS3215 ≈ 45 × 25 × 35 mm, horn Ø 22 mm). Linklengtes zijn een eerste schatting en nog niet doorgerekend op koppel. Model gemeten: C001 ±1° (Rhoban-model), C044 en C046 ±0,6° (eigen BAM-fits). Bron: github.com/chrisking1981/so101-bam-pendulum.</p>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(() => {
+  const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+  const canvas = document.getElementById('c');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(38, 1, 1, 6000);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true; controls.dampingFactor = 0.08;
+
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x8a8f88, 0.85));
+  const sun = new THREE.DirectionalLight(0xffffff, 0.75); sun.position.set(300, 600, 400); scene.add(sun);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-400, 200, -300); scene.add(fill);
+
+  const mats = {};
+  function applyTheme() {
+    scene.background = new THREE.Color(css('--scene'));
+    const set = (k, v) => { if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08 }); mats[k].color.set(v); };
+    set('C001', css('--c001')); set('C044', css('--c044')); set('C046', css('--c046')); set('pla', css('--pla'));
+    if (!mats.horn) mats.horn = new THREE.MeshStandardMaterial({ color: 0xb9bdc2, roughness: 0.3, metalness: 0.8 });
+    if (!mats.rubber) mats.rubber = new THREE.MeshStandardMaterial({ color: 0x2a2d2c, roughness: 0.9 });
+    if (grid) { scene.remove(grid); }
+    grid = new THREE.GridHelper(1400, 28, new THREE.Color(css('--grid')), new THREE.Color(css('--grid')));
+    grid.position.y = 0; scene.add(grid);
+  }
+  let grid = null;
+  applyTheme();
+  new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
+
+  // --- building blocks (mm) ---
+  const SERVO = { L: 45.2, W: 24.7, H: 35, hornR: 11, hornOff: 11.1 };
+  // A joint: a frame placed in `parent` at `pos`, rotated by intrinsic steps [[axis, deg], ...].
+  // The servo body is fixed to the frame; the returned pivot rotates about the frame's local Y (the horn axis).
+  function joint(parent, type, pos, steps = [], bodyYaw = 0) {
+    const frame = new THREE.Group(); frame.position.set(...pos);
+    for (const [ax, deg] of steps) frame.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(...ax), deg * Math.PI / 180));
+    parent.add(frame);
+    const bodyG = new THREE.Group(); bodyG.rotation.y = bodyYaw * Math.PI / 180; frame.add(bodyG);
+    const body = new THREE.Mesh(new THREE.BoxGeometry(SERVO.L, SERVO.H, SERVO.W), mats[type]);
+    body.position.set(-(SERVO.L / 2 - SERVO.hornOff), -SERVO.H / 2 - 2, 0); bodyG.add(body);
+    const pivot = new THREE.Group(); frame.add(pivot);
+    const horn = new THREE.Mesh(new THREE.CylinderGeometry(SERVO.hornR, SERVO.hornR, 4, 28), mats.horn);
+    horn.position.y = 0; pivot.add(horn);
+    pivot.userData.type = type;
+    return pivot;
+  }
+  // A printed link between two points in `parent` coordinates.
+  function link(parent, a, b, w = 18, t = 6, mat = 'pla') {
+    const A = new THREE.Vector3(...a), B = new THREE.Vector3(...b);
+    const len = A.distanceTo(B);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(len, t, w), mats[mat]);
+    m.position.copy(A.clone().add(B).multiplyScalar(0.5));
+    m.quaternion.setFromUnitVectors(new THREE.Vector3(1, 0, 0), B.clone().sub(A).normalize());
+    parent.add(m); return m;
+  }
+  function pad(parent, p, r = 14) {
+    const m = new THREE.Mesh(new THREE.SphereGeometry(r, 20, 14), mats.rubber); m.position.set(...p); parent.add(m); return m;
+  }
+
+  // --- concepts ---
+  const concepts = {
+    rups: {
+      title: 'Rups',
+      cam: [240, 300, -420], target: [0, 40, 0],
+      text: `<h2>Rups</h2><p>Een ketting van zes schakels die over de grond kruipt door golven door zijn lijf te sturen. Alle gewrichten knikken op en neer. De zware C001 zit in het midden, waar hij de meeste schakels moet optillen; de lichte, snelle C046's zitten aan de uiteinden.</p>
+        <h3>Waarom dit goed past</h3><ul><li>Kan niet omvallen: ideaal eerste RL-project.</li><li>Belasting loopt af van midden naar uiteinden, net als de servosterkte.</li><li>Bijna symmetrisch rond de C001: C046–C044–C001–C044–C046, plus een C046 als kop.</li></ul>
+        <h3>Let op</h3><ul><li>Wrijving met de grond bepaalt alles: geef de pootjes rubber en randomiseer de grondwrijving in de simulatie.</li></ul>`,
+      map: [['Kop', 'C046', 'Licht, snel: richt de kop'], ['Schakel 2', 'C046', 'Weinig last aan de rand'], ['Schakel 3', 'C044', 'Middenbelasting'], ['Midden', 'C001', 'Tilt het meeste lijf'], ['Schakel 5', 'C044', 'Middenbelasting'], ['Staart', 'C046', 'Weinig last aan de rand']],
+      build(root) {
+        const types = ['C046', 'C046', 'C044', 'C001', 'C044', 'C046'];
+        const seg = 72, y = 24;
+        const base = new THREE.Group(); base.position.set(-seg * 3.5, y, 0); root.add(base);
+        link(base, [-30, 0, 0], [0, 0, 0], 28); pad(base, [-30, -14, 0], 12);
+        let parent = base; const joints = [];
+        types.forEach((tp, i) => {
+          const pv = joint(parent, tp, [i === 0 ? 0 : seg, 0, 0], i === 0 ? [[[1, 0, 0], 90]] : [], 0);
+          joints.push(pv);
+          link(pv, [0, 0, 0], [seg, 0, 0], 28);
+          parent = pv;
+        });
+        pad(parent, [seg + 6, 0, 16], 12);
+        this.joints = joints;
+      },
+      animate(t) { this.joints.forEach((j, i) => { j.rotation.y = 0.42 * Math.sin(2.2 * t - i * 0.9); }); }
+    },
+    krab: {
+      title: 'Driepoot-krabbel',
+      cam: [330, 330, 330], target: [0, 90, 0],
+      text: `<h2>Driepoot-krabbel</h2><p>Een rond lijf op drie identieke poten: precies je drie C046's, 120° uit elkaar. Bovenop draait de C001 een zwaaiarm van twee C044-gewrichten rond, als staart om gewicht te verplaatsen of om zich af te duwen.</p>
+        <h3>Waarom dit goed past</h3><ul><li>De drie gelijke C046's maken het lijf rotatiesymmetrisch: elke poot doet hetzelfde.</li><li>De C001 draagt de hele zwaaiarm, waar het meeste koppel nodig is.</li><li>RL kan zelf ontdekken hoe de arm helpt bij kantelen en voortbewegen.</li></ul>
+        <h3>Let op</h3><ul><li>Met één gewricht per poot kan een poot alleen op en neer: het lopen wordt een schuivend gestrompel.</li></ul>`,
+      map: [['Poot 1, 2, 3', '3× C046', 'Gelijke poten, licht en snel'], ['Draaischijf bovenop', 'C001', 'Draagt de hele zwaaiarm'], ['Arm schouder', 'C044', 'Tilt arm en gewicht'], ['Arm elleboog', 'C044', 'Tweede armdeel']],
+      build(root) {
+        const body = new THREE.Group(); body.position.set(0, 100, 0); root.add(body);
+        const disc = new THREE.Mesh(new THREE.CylinderGeometry(62, 62, 10, 48), mats.pla); body.add(disc);
+        const legs = [];
+        [90, 210, 330].forEach(ang => {
+          const yaw = new THREE.Group(); yaw.rotation.y = -ang * Math.PI / 180; body.add(yaw);
+          const pv = joint(yaw, 'C046', [62, 0, 0], [[[1, 0, 0], 90]], 0);
+          const foot = [62, 0, 78];
+          link(pv, [0, 0, 0], foot, 18); pad(pv, foot, 11);
+          legs.push(pv);
+        });
+        const top = joint(body, 'C001', [0, 44, 0], [], 0);
+        const sh = joint(top, 'C044', [24, 30, 0], [[[1, 0, 0], 90]], 180);
+        link(sh, [0, 0, 0], [80, 0, -10], 18);
+        const el = joint(sh, 'C044', [80, 0, -10], [], 180);
+        link(el, [0, 0, 0], [70, 0, 10], 18);
+        const w = new THREE.Mesh(new THREE.BoxGeometry(26, 18, 30), mats.horn); w.position.set(78, 0, 12); el.add(w);
+        this.legs = legs; this.top = top; this.sh = sh; this.el = el;
+      },
+      animate(t) {
+        this.legs.forEach((j, i) => { j.rotation.y = 0.35 * Math.sin(2.4 * t + i * 2.094); });
+        this.top.rotation.y = 0.9 * Math.sin(0.7 * t);
+        this.sh.rotation.y = -0.35 + 0.3 * Math.sin(1.4 * t);
+        this.el.rotation.y = 0.5 * Math.sin(1.4 * t + 1.2);
+      }
+    },
+    hup: {
+      title: 'Hupper met staart',
+      cam: [380, 260, 380], target: [-30, 150, 0],
+      text: `<h2>Hupper met staart</h2><p>Eén sterk been onder een romp, met een staart van drie gewrichten die zwaait voor balans, zoals een kangoeroe. Het been is opgebouwd als je pendelproef: sterk bij de basis (C001 in de heup), lichter naar beneden (C044 knie, C046 enkel).</p>
+        <h3>Waarom dit goed past</h3><ul><li>De heup draagt het hele lijf: daar zit de sterkste servo.</li><li>De staart heeft weinig last en moet snel zwaaien: C044 bij de romp, C046's naar het puntje.</li><li>Uitdagend RL-probleem: balanceren op één been met een staart als tegengewicht.</li></ul>
+        <h3>Let op</h3><ul><li>Echt springen lukt waarschijnlijk niet met dit koppel; hinken en schuiven wel.</li><li>Valt makkelijk om: geef hem een brede voet.</li></ul>`,
+      map: [['Heup', 'C001', 'Draagt romp en staart'], ['Knie', 'C044', 'Middelste belasting'], ['Enkel', 'C046', 'Licht deel, snelle correcties'], ['Staartbasis', 'C044', 'Zwaait de hele staart'], ['Staart midden', 'C046', 'Licht en snel'], ['Staartpunt', 'C046', 'Licht en snel, met gewichtje']],
+      build(root) {
+        const torso = new THREE.Group(); torso.position.set(0, 255, 0); root.add(torso);
+        const box = new THREE.Mesh(new THREE.BoxGeometry(100, 52, 64), mats.pla); torso.add(box);
+        const hip = joint(torso, 'C001', [12, -46, 0], [[[1, 0, 0], 90]], 0);
+        link(hip, [0, 0, 0], [0, 0, 95], 22);
+        const knee = joint(hip, 'C044', [0, 0, 95], [], 0);
+        link(knee, [0, 0, 0], [0, 0, 92], 22);
+        const ank = joint(knee, 'C046', [0, 0, 92], [], 0);
+        link(ank, [-34, 0, 26], [56, 0, 26], 8, 54);
+        pad(ank, [-34, 0, 32], 8); pad(ank, [56, 0, 32], 8);
+        const t1 = joint(torso, 'C044', [-62, 0, 0], [[[1, 0, 0], 90]], 180);
+        link(t1, [0, 0, 0], [-72, 0, 12], 18);
+        const t2 = joint(t1, 'C046', [-72, 0, 12], [], 180);
+        link(t2, [0, 0, 0], [-62, 0, 10], 16);
+        const t3 = joint(t2, 'C046', [-62, 0, 10], [], 180);
+        link(t3, [0, 0, 0], [-56, 0, 8], 14);
+        const tip = new THREE.Mesh(new THREE.SphereGeometry(13, 20, 14), mats.horn); tip.position.set(-60, 0, 8); t3.add(tip);
+        this.j = { hip, knee, ank, t1, t2, t3 };
+      },
+      animate(t) {
+        const j = this.j, s = Math.sin(1.8 * t);
+        j.hip.rotation.y = 0.25 * s; j.knee.rotation.y = -0.35 - 0.3 * s; j.ank.rotation.y = 0.2 + 0.25 * s;
+        j.t1.rotation.y = 0.35 * Math.sin(1.8 * t + 1.6); j.t2.rotation.y = 0.35 * Math.sin(1.8 * t + 2.3); j.t3.rotation.y = 0.35 * Math.sin(1.8 * t + 3.0);
+      }
+    }
+  };
+
+  // --- view switching ---
+  let current = null, root = null;
+  const info = document.getElementById('info'), map = document.getElementById('map');
+  const colorVar = { C001: '--c001', C044: '--c044', C046: '--c046' };
+  function show(key) {
+    if (root) scene.remove(root);
+    root = new THREE.Group(); scene.add(root);
+    current = concepts[key]; current.build(root); current.animate(0);
+    camera.position.set(...current.cam); controls.target.set(...current.target); controls.update();
+    info.innerHTML = current.text;
+    map.innerHTML = current.map.map(([p, s, w]) => {
+      const t = s.replace(/^\d×\s*/, '');
+      return `<tr><td>${p}</td><td class="num"><i class="sw" style="background:var(${colorVar[t]});margin-right:6px;vertical-align:-1px"></i>${s}</td><td>${w}</td></tr>`;
+    }).join('');
+    document.querySelectorAll('.tabs button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.k === key)));
+  }
+  document.querySelectorAll('.tabs button').forEach(b => b.addEventListener('click', () => show(b.dataset.k)));
+
+  let playing = !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const playBtn = document.getElementById('play');
+  const syncPlay = () => { playBtn.textContent = playing ? 'Pauzeer beweging' : 'Speel beweging'; };
+  playBtn.addEventListener('click', () => { playing = !playing; syncPlay(); }); syncPlay();
+
+  function resize() {
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== Math.round(w * renderer.getPixelRatio()) || canvas.height !== Math.round(h * renderer.getPixelRatio())) {
+      renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+    }
+  }
+  let t = 0, last = performance.now();
+  function loop(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (playing) { t += dt; current.animate(t); }
+    resize(); controls.update(); renderer.render(scene, camera);
+    requestAnimationFrame(loop);
+  }
+  show('rups');
+  requestAnimationFrame(loop);
+})();
+</script>
