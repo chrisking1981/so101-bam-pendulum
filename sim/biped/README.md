@@ -38,6 +38,41 @@ ankles follow with amplitude B and phase φ. The search covered 48 combinations 
 This rhythm is only a demonstration that the model can move forward. Without hip roll it slides its feet; a real gait has to come
 from RL, and the real robot will slide differently depending on its floor and its foot pads.
 
+## First RL policy (PPO on an M1 MacBook, CPU only)
+
+mjlab needs an NVIDIA GPU, so this run uses plain MuJoCo on the CPU with stable-baselines3 PPO.
+
+**Setup**
+
+- [biped_env.py](biped_env.py): the policy runs at 50 Hz; physics at 2 ms, with the BAM servo models updated every physics step.
+- **Action:** 4 joint targets (±0.6 rad).
+- **Observation:** joints, gravity in the pelvis frame, gyro, last action, gait clock.
+- **Reward:** forward speed up to 0.12 m/s, staying upright, and small penalties for sideways speed, turning, tilt and jerky actions.
+- **Randomization per episode:** floor friction ×0.5–1.2, BAM friction ×0.7–1.3, supply 7.0–7.8 V, link masses ±10%, and a 0 or 1 step action delay.
+
+**Training** ([train_ppo.py](train_ppo.py))
+
+- 3 M steps on 6 cores in **27 minutes**.
+- The policy learned to stay upright after about 0.5 M steps, and the reward kept rising after that.
+- Log: [runs/ppo1/train.log](runs/ppo1/train.log). Model: `runs/ppo1/model.zip` and `vecnorm.pkl`.
+
+**Result** ([eval_policy.py](eval_policy.py), 10 s episodes)
+
+| Test | Forward | Sideways | Falls |
+|---|---:|---:|---:|
+| Nominal model | 139 cm | 87 cm | 0 |
+| 20 randomized episodes with unseen seeds | 167 cm on average (96–259) | 67 cm on average | 0 / 20 |
+
+- **It walks and does not fall, even with randomized friction, voltage and masses.**
+- **It drifts sideways and walks a curve.** The penalties on sideways speed and turning are too weak; that is the first thing to fix in a
+  second run (reward heading, or penalise lateral drift harder).
+- It walks with a wide, asymmetric scissor stance. Whether this transfers to the real robot depends on the floor and the foot pads, which is why
+  the floor friction is randomized widely.
+
+[biped_rl_walk.mp4](biped_rl_walk.mp4):
+
+![RL walking frames](biped_rl_walk_frames.png)
+
 ## Run
 
 From a [Rhoban/bam](https://github.com/Rhoban/bam) checkout with `uv sync --extra mujoco`:
@@ -46,7 +81,11 @@ From a [Rhoban/bam](https://github.com/Rhoban/bam) checkout with `uv sync --extr
 MUJOCO_GL=cgl uv run python /path/to/sim/biped/run_biped.py --render frames
 MUJOCO_GL=cgl uv run python /path/to/sim/biped/gait.py --search
 MUJOCO_GL=cgl uv run python /path/to/sim/biped/gait.py --video walk.mp4
+uv run python /path/to/sim/biped/train_ppo.py --steps 3000000 --envs 6 --out runs/ppo1
+MUJOCO_GL=cgl uv run python /path/to/sim/biped/eval_policy.py --run runs/ppo1 --video rl.mp4
 ```
+
+RL dependencies: `uv pip install stable-baselines3 gymnasium imageio imageio-ffmpeg`.
 
 To look at the model interactively (without the BAM servos, so the joints are limp):
 
