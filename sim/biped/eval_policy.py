@@ -6,7 +6,7 @@ Reports distance, drift and falls on the nominal model and on 20 randomized epis
 import argparse, os, sys
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from biped_env import BipedEnv
+from biped_env import BipedEnv, BipedEnvV2, NAMES
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv, VecNormalize
 
@@ -14,6 +14,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--run", required=True)
 p.add_argument("--video")
 p.add_argument("--episodes", type=int, default=20)
+p.add_argument("--env", default="v1", choices=["v1", "v2"])
 a = p.parse_args()
 
 model = PPO.load(os.path.join(a.run, "model"), device="cpu")
@@ -26,7 +27,7 @@ def make_norm(env):
 
 
 def episode(randomize, seed, frames=None):
-    env = BipedEnv(randomize=randomize)
+    env = (BipedEnvV2 if a.env == "v2" else BipedEnv)(randomize=randomize)
     norm = make_norm(env)
     obs, _ = env.reset(seed=seed)
     x0, y0 = env.d.qpos[0], env.d.qpos[1]

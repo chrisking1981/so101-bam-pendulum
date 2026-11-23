@@ -127,3 +127,64 @@ class BipedEnv(gym.Env):
         self._cam.lookat[:] = [self.d.qpos[0], self.d.qpos[1], 0.10]
         self._renderer.update_scene(self.d, camera=self._cam)
         return self._renderer.render()
+
+
+class BipedEnvV2(BipedEnv):
+    """Residual policy on top of the hand-made scissor gait, with a reward that asks for straight, smooth walking.
+
+    targets = gait(t) + 0.15 rad * action, where gait(t) is the best open-loop rhythm from gait.py
+    (1.5 Hz, hips +-0.25 rad in counter-phase, ankles +-0.25 rad in counter-phase to the hips).
+    Extra penalties: heading error (yaw angle, not the per-step wiggle), averaged sideways drift, targets near the joint limits, jerky and large residuals, mechanical power.
+    """
+    F, A, B, PHI, RES = 1.5, 0.25, 0.25, np.pi, 0.15
+
+    def gait(self, t):
+        ramp = min(1.0, t / 1.0)
+        s = np.sin(2 * np.pi * self.F * t); c = np.sin(2 * np.pi * self.F * t + self.PHI)
+        return ramp * np.array([self.A * s, -self.A * s, self.B * c, -self.B * c])
+
+    def _obs(self):
+        o = super()._obs()
+        ph = 2 * np.pi * self.F * self.t
+        o[18:20] = [np.sin(ph), np.cos(ph)]        # clock in sync with the base gait
+        return o
+
+    def step(self, action):
+        a = np.clip(np.asarray(action, dtype=np.float64), -1, 1)
+        applied = self.pending if self.delay else a
+        self.pending = a
+        x0, y0 = self.d.qpos[0], self.d.qpos[1]
+        tg = self.gait(self.t) + self.RES * applied
+        power = 0.0
+        for _ in range(self.substeps):
+            for cc, idx in ((self.ctrl[0], (0, 1)), (self.ctrl[1], (2, 3))):
+                for i in idx:
+                    cc.set_q_target(NAMES[i], tg[i])
+                cc.update()
+            if self.fscale != 1.0:
+                self.m.dof_frictionloss[self.dofs] *= self.fscale
+            mujoco.mj_step(self.m, self.d)
+            power += float(np.sum(np.abs(self.d.qfrc_actuator[self.jv] * self.d.qvel[self.jv])))
+        power /= self.substeps
+        self.t += 0.02; self.steps += 1
+        vx = (self.d.qpos[0] - x0) / 0.02
+        vy = (self.d.qpos[1] - y0) / 0.02
+        roll, pitch = self._quat_tilt()
+        w, x, y, z = self.d.qpos[3:7]
+        yaw = np.arctan2(2 * (w * z + x * y), 1 - 2 * (y * y + z * z))
+        fell = self.d.qpos[2] < 0.10 or abs(roll) > 0.7 or abs(pitch) > 0.7
+        near_limit = float(np.sum(np.clip(np.abs(tg) - 0.45, 0, None)))
+        self.vy_avg = 0.92 * getattr(self, 'vy_avg', 0.0) + 0.08 * vy        # ~0.25 s average: drift, not the per-step wiggle
+        reward = (3.0 * min(vx, self.v_cmd) + 0.3
+                  - 4.0 * abs(self.vy_avg) - 2.0 * yaw ** 2
+                  - 1.0 * (roll ** 2 + pitch ** 2)
+                  - 0.05 * float(np.sum((a - self.last_a) ** 2)) - 0.02 * float(np.sum(a ** 2))
+                  - 2.0 * near_limit - 0.002 * power)
+        if fell:
+            reward -= 10.0
+        self.last_a = a
+        return self._obs(), float(reward), bool(fell), bool(self.steps >= self.max_steps), {"vx": vx, "x": self.d.qpos[0]}
+
+    def reset(self, seed=None, options=None):
+        self.vy_avg = 0.0
+        return super().reset(seed=seed, options=options)

@@ -5,7 +5,7 @@
 import argparse, os, sys, time
 import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from biped_env import BipedEnv
+from biped_env import BipedEnv, BipedEnvV2
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor, VecNormalize
 from stable_baselines3.common.callbacks import BaseCallback
@@ -15,6 +15,8 @@ p.add_argument("--steps", type=int, default=3_000_000)
 p.add_argument("--envs", type=int, default=6)
 p.add_argument("--out", default=os.path.join(os.path.dirname(os.path.abspath(__file__)), "runs", "ppo1"))
 p.add_argument("--seed", type=int, default=0)
+p.add_argument("--env", default="v1", choices=["v1", "v2"])
+p.add_argument("--log-std", type=float, default=0.0, help="initial log std of the action noise (v2: start small, near the base gait)")
 a = p.parse_args()
 os.makedirs(a.out, exist_ok=True)
 
@@ -36,10 +38,11 @@ class Progress(BaseCallback):
 
 
 if __name__ == "__main__":
-    env = SubprocVecEnv([lambda i=i: BipedEnv(randomize=True) for i in range(a.envs)])
+    Env = BipedEnvV2 if a.env == "v2" else BipedEnv
+    env = SubprocVecEnv([lambda i=i: Env(randomize=True) for i in range(a.envs)])
     env = VecNormalize(VecMonitor(env), norm_obs=True, norm_reward=True, clip_obs=10.0)
     model = PPO("MlpPolicy", env, n_steps=1024, batch_size=2048, n_epochs=8, learning_rate=3e-4, gamma=0.99,
-                gae_lambda=0.95, clip_range=0.2, ent_coef=0.002, policy_kwargs=dict(net_arch=[128, 128]),
+                gae_lambda=0.95, clip_range=0.2, ent_coef=0.002, policy_kwargs=dict(net_arch=[128, 128], log_std_init=a.log_std),
                 seed=a.seed, device="cpu", verbose=0)
     model.learn(total_timesteps=a.steps, callback=Progress())
     model.save(os.path.join(a.out, "model")); env.save(os.path.join(a.out, "vecnorm.pkl"))
