@@ -1,0 +1,71 @@
+{
+  "completed": [],
+  "stop": "p4-sin_time_square RuntimeError(\"telemetry guard {'ticks': 2157, 'volts': 4.8, 'temp_C': 22, 'current_raw': 44, 'timestamp': 4.0084709159928025, 'command_timestamp': 4.007728999997198, 'goal_ticks': 1712, 'enabled': True}\")",
+  "inputs": "Rhoban Feetech raw archive, no tip load",
+  "servo": "C044 ID 3, horn only",
+  "voltage_bounds": [
+    5,
+    8.4
+  ],
+  "voltage_note": "One quantization step at 4.9 V tolerated for less than 60 ms. Lower readings are immediate stops.",
+  "current_trip_raw": 150,
+  "original": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "55": 1
+  },
+  "zero_ticks": 1925,
+  "setting_readbacks": [
+    {
+      "register": 55,
+      "requested": 0,
+      "actual": 0,
+      "write_error": null
+    },
+    {
+      "register": 21,
+      "requested": 4,
+      "actual": 4,
+      "write_error": "(-6, 0)"
+    },
+    {
+      "register": 55,
+      "requested": 1,
+      "actual": 1,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 0,
+      "actual": 0,
+      "write_error": null
+    },
+    {
+      "register": 21,
+      "requested": 32,
+      "actual": 32,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 1,
+      "actual": 1,
+      "write_error": null
+    }
+  ],
+  "p4-sin_time_square": {
+    "member": "raw/2025-02-27_10h25m52.json",
+    "scale": 1,
+    "p": 4,
+    "d": 32
+  },
+  "final": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "40": 0,
+    "55": 1
+  },
+  "final_ticks": 1867
+}

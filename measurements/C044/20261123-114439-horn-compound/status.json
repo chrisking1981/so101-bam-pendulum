@@ -1,0 +1,123 @@
+{
+  "completed": [
+    "p4-sin_sin-90pct",
+    "p8-sin_sin-90pct",
+    "p16-sin_sin-90pct"
+  ],
+  "stop": null,
+  "inputs": "Rhoban Feetech raw archive, no tip load",
+  "servo": "C044 ID 3, horn only",
+  "voltage_bounds": [
+    5,
+    8.4
+  ],
+  "voltage_note": "One quantization step at 4.9 V tolerated for less than 60 ms. Lower readings are immediate stops.",
+  "current_trip_raw": 150,
+  "original": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "55": 1
+  },
+  "zero_ticks": 1925,
+  "setting_readbacks": [
+    {
+      "register": 55,
+      "requested": 0,
+      "actual": 0,
+      "write_error": null
+    },
+    {
+      "register": 21,
+      "requested": 4,
+      "actual": 4,
+      "write_error": "(-6, 0)"
+    },
+    {
+      "register": 55,
+      "requested": 1,
+      "actual": 1,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 0,
+      "actual": 0,
+      "write_error": null
+    },
+    {
+      "register": 21,
+      "requested": 8,
+      "actual": 8,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 1,
+      "actual": 1,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 0,
+      "actual": 0,
+      "write_error": null
+    },
+    {
+      "register": 21,
+      "requested": 16,
+      "actual": 16,
+      "write_error": "(-6, 0)"
+    },
+    {
+      "register": 55,
+      "requested": 1,
+      "actual": 1,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 0,
+      "actual": 0,
+      "write_error": null
+    },
+    {
+      "register": 21,
+      "requested": 32,
+      "actual": 32,
+      "write_error": null
+    },
+    {
+      "register": 55,
+      "requested": 1,
+      "actual": 1,
+      "write_error": null
+    }
+  ],
+  "p4-sin_sin-90pct": {
+    "member": "raw/2025-02-27_10h25m25.json",
+    "scale": 0.9,
+    "p": 4,
+    "d": 32
+  },
+  "p8-sin_sin-90pct": {
+    "member": "raw/2025-02-27_10h26m12.json",
+    "scale": 0.9,
+    "p": 8,
+    "d": 32
+  },
+  "p16-sin_sin-90pct": {
+    "member": "raw/2025-02-27_10h26m59.json",
+    "scale": 0.9,
+    "p": 16,
+    "d": 32
+  },
+  "final": {
+    "21": 32,
+    "22": 32,
+    "23": 0,
+    "40": 0,
+    "55": 1
+  },
+  "final_ticks": 1835
+}
