@@ -21,6 +21,9 @@
   --skin1: #8fcf6a; --skin1b: #5fae4a;   /* Wiebel */
   --skin2: #f2694a; --skin2b: #c8482e;   /* Knijp */
   --skin3: #a68ae3; --skin3b: #7d61c9;   /* Hop */
+  --w_house: #2f7d4a; --w_clev1: #c6e85a; --w_clev2: #ffd447; --w_hub: #ff8a3d; --w_beam: #3f9a57; --w_dot: #fff4d6;   /* Wiebel */
+  --k_house: #8e2a2a; --k_clev: #ff8a66; --k_hub: #2ec4b6; --k_disc: #1f6f8b;                                      /* Knijp */
+  --h_house: #5a3d9a; --h_clev: #c3b0f5; --h_hub: #5fd3a6;                                                         /* Hop */
   --belly: #f6e8cc; --sclera: #fbfaf6; --pupil: #15171a; --blush: #f59aa6;
   --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
   --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
@@ -82,7 +85,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   <header>
     <div class="eyebrow">SO-101 leader-servo's · 1× C001 · 2× C044 · 3× C046</div>
     <h1>Wiebel, Knijp en Hop</h1>
-    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in dikke geprinte houders met ronde naven en U-beugels, in de stijl van de SO-101 (geel = PLA, gebroken wit = low-poly kop, voeten en staart). Sleep om te draaien, scroll of knijp om te zoomen.</p>
+    <p class="lede">Elk concept gebruikt alle zes servo's uit de leader-arm. De sterkste servo zit waar de meeste belasting is, de snelste waar weinig gewicht hangt. Zwarte servo's met een gekleurde band per type, in dikke geprinte houders met ronde naven en U-beugels, in de stijl van de SO-101 Elk karakter heeft een eigen kleurenpalet voor zijn printdelen. Sleep om te draaien, scroll of knijp om te zoomen.</p>
   </header>
 
   <div class="tabs" role="tablist" aria-label="Robotconcept">
@@ -98,8 +101,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         <span><i class="sw" style="background:var(--c001)"></i>band C001 1:345</span>
         <span><i class="sw" style="background:var(--c044)"></i>C044 1:191</span>
         <span><i class="sw" style="background:var(--c046)"></i>C046 1:147</span>
-        <span><i class="sw" style="background:var(--pla)"></i>PLA</span>
-        <span><i class="sw" style="background:var(--shell)"></i>low-poly</span>
+        <span>printdelen: kleur per karakter</span>
       </div>
       <div class="ctl"><button id="play" type="button">Pauzeer beweging</button><span class="hint">sleep = draaien</span></div>
     </div>
@@ -142,6 +144,10 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
       if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.62, metalness: 0.04, flatShading: true });
       mats[k].color.set(css('--' + k));
     }
+    for (const k of ['w_house', 'w_clev1', 'w_clev2', 'w_hub', 'w_beam', 'w_dot', 'k_house', 'k_clev', 'k_hub', 'k_disc', 'h_house', 'h_clev', 'h_hub']) {
+      if (!mats[k]) mats[k] = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05 });
+      mats[k].color.set(css('--' + k));
+    }
     if (!mats.pupil) mats.pupil = new THREE.MeshStandardMaterial({ roughness: 0.2, metalness: 0.1, flatShading: true });
     mats.pupil.color.set(css('--pupil'));
     if (!mats.eye) mats.eye = new THREE.MeshStandardMaterial({ color: 0x141618, roughness: 0.25, metalness: 0.2, flatShading: true });
@@ -167,6 +173,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   const S = { L: 45.2, H: 35, W: 24.7, off: 11.1 };
   const BX = S.off - S.L / 2, BY = -2 - S.H / 2;           // body centre
   const MID = BY;                                         // centre line of a link (same height as body centre)
+  let PAL = { house: 'pla', clev: 'pla', hub: 'pla', beam: 'pla' };   // printed-part colours of the robot being built
   const CLEV = 44;                                        // horn axis -> outer face of the U-bracket bridge
   const BACK = S.L - S.off + 5;                           // horn axis -> back of the housing
   function box(parent, size, pos, mat, rot) {
@@ -205,14 +212,14 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   // SO-101-style motor holder: thick rounded cradle (4 mm walls) with a rounded back, side ribs and screw bosses.
   function housing(parent) {
     const w = 4, wallH = 24, yb = -2 - S.H;
-    rbox(parent, [S.L + 2 * w, w + 1, S.W + 2 * w], [BX, yb - (w + 1) / 2, 0], 'pla', 2);
+    rbox(parent, [S.L + 2 * w, w + 1, S.W + 2 * w], [BX, yb - (w + 1) / 2, 0], PAL.house, 2);
     for (const s of [-1, 1]) {
-      rbox(parent, [S.L + 2 * w, wallH, w], [BX, yb + wallH / 2, s * (S.W / 2 + w / 2)], 'pla', 1.6);
-      rbox(parent, [8, wallH + w, 3], [BX - 6, yb + wallH / 2 - w / 2, s * (S.W / 2 + w + 1.5)], 'pla', 1.2);   // rib
+      rbox(parent, [S.L + 2 * w, wallH, w], [BX, yb + wallH / 2, s * (S.W / 2 + w / 2)], PAL.house, 1.6);
+      rbox(parent, [8, wallH + w, 3], [BX - 6, yb + wallH / 2 - w / 2, s * (S.W / 2 + w + 1.5)], PAL.house, 1.2);   // rib
       cyl(parent, 1.7, 1, [BX + 12, yb + 6, s * (S.W / 2 + w + 0.5)], 'screw', 10);
       cyl(parent, 1.7, 1, [BX - 16, yb + 6, s * (S.W / 2 + w + 0.5)], 'screw', 10);
     }
-    rbox(parent, [w + 2, wallH + w, S.W + 2 * w], [BX - S.L / 2 - w / 2 - 1, yb + wallH / 2 - w / 2, 0], 'pla', 2);
+    rbox(parent, [w + 2, wallH + w, S.W + 2 * w], [BX - S.L / 2 - w / 2 - 1, yb + wallH / 2 - w / 2, 0], PAL.house, 2);
   }
   // SO-101-style output bracket: thick rounded arms with a big round hub on both sides of the servo
   // (top hub bolted to the horn, bottom hub on the rear bearing), joined by a solid bridge.
@@ -220,10 +227,10 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
     const t = 6, top = 2 + t / 2 + 0.5, bot = -2 - S.H - 5 - t / 2 - 2, w = 32, hubR = 19;
     const armL = CLEV - 8;
     for (const y of [top, bot]) {
-      cyl(parent, hubR, t, [0, y, 0], 'pla', 32);
-      rbox(parent, [armL, t, w], [armL / 2, y, 0], 'pla', 2.5);
+      cyl(parent, hubR, t, [0, y, 0], PAL.hub, 32);
+      rbox(parent, [armL, t, w], [armL / 2, y, 0], PAL.clev, 2.5);
     }
-    rbox(parent, [10, top - bot + t, w], [CLEV - 5, (top + bot) / 2, 0], 'pla', 3);
+    rbox(parent, [10, top - bot + t, w], [CLEV - 5, (top + bot) / 2, 0], PAL.clev, 3);
     for (let k = 0; k < 4; k++) { const a = k * Math.PI / 2 + Math.PI / 4; cyl(parent, 2, 1.4, [7 * Math.cos(a), top + t / 2 + 0.5, 7 * Math.sin(a)], 'screw', 10); }
     cyl(parent, 2.8, 1.4, [0, top + t / 2 + 0.5, 0], 'screw', 12);
     cyl(parent, 3, 1.4, [0, bot - t / 2 - 0.5, 0], 'screw', 12);
@@ -243,12 +250,12 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   }
   // Next joint in a chain: a printed beam from the U-bracket to the back of the next housing (same orientation).
   function next(prevOut, type, gap, dir = 0) {
-    if (gap > 0) rbox(prevOut, [gap + 6, 22, 28], [CLEV + gap / 2 - 3, MID, 0], 'pla', 4);
+    if (gap > 0) rbox(prevOut, [gap + 6, 22, 28], [CLEV + gap / 2 - 3, MID, 0], PAL.beam, 4);
     return joint(prevOut, type, [CLEV + gap + BACK, 0, 0], [], dir);
   }
   // A beam from the U-bracket ending in a part; returns the end point (in out coordinates).
-  function beam(out, len, w = 28, h = 22) { rbox(out, [len + 6, h, w], [CLEV + len / 2 - 3, MID, 0], 'pla', 4); return [CLEV + len, MID, 0]; }
-  function foot(parent, p, r = 11) { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mats.rubber); m.position.set(...p); m.scale.set(1, 1, 0.75); parent.add(m); return m; }
+  function beam(out, len, w = 28, h = 22) { rbox(out, [len + 6, h, w], [CLEV + len / 2 - 3, MID, 0], PAL.beam, 4); return [CLEV + len, MID, 0]; }
+  function foot(parent, p, r = 11, mat = 'rubber') { const m = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 0), mats[mat]); m.position.set(...p); m.scale.set(1, 1, 0.75); parent.add(m); return m; }
   // Low-poly parts: faceted shells for heads, toes and tails (flat shading, few faces).
   function poly(parent, geom, pos, scale = [1, 1, 1], mat = 'shell', rot) {
     const m = new THREE.Mesh(geom, mats[mat]); m.position.set(...pos); m.scale.set(...scale);
@@ -289,7 +296,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
   const rad = d => d * Math.PI / 180;
   const concepts = {
     rups: {
-      cam: [560, 300, -360], target: [80, 30, 0],
+      cam: [600, 330, -430], target: [80, 40, 0],
       text: `<h2>Wiebel de rups</h2><p>Een vrolijke rups van zes servo's die over de grond golft. Elke schakel is een SO-101-gewricht in een dikke houder, met een groen schildje bovenop en twee pootjes eronder. Voorop een grote kop met knipperogen en voelsprieten die meewiebelen.</p>
         <h3>Waarom dit goed past</h3><ul><li>Kan niet omvallen: ideaal eerste RL-project.</li><li>Belasting loopt af van midden naar uiteinden, net als de servosterkte: de C001 zit in het midden.</li><li>Bijna symmetrisch: C046–C044–C001–C044–C046, plus een C046 als kop.</li></ul>
         <h3>Let op</h3><ul><li>Grip op de grond bepaalt alles: rubber pootjes, en grondwrijving randomiseren in de simulatie.</li><li>Een schakel is ongeveer 92 mm; het hele lijf ongeveer 65 cm.</li></ul>`,
@@ -298,16 +305,18 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         const types = ['C046', 'C044', 'C001', 'C044', 'C046', 'C046'];
         const base = new THREE.Group(); base.position.set(-250, 18, 0); root.add(base);
         this.lids = []; this.wob = [];
+        PAL = { house: 'w_house', clev: 'w_clev1', hub: 'w_hub', beam: 'w_beam' };
         let j = joint(base, types[0], [0, 0, 0], [[[1, 0, 0], 90]]);
         const js = [j];
-        for (let i = 1; i < types.length; i++) { j = next(j.out, types[i], 4); js.push(j); }
+        for (let i = 1; i < types.length; i++) { PAL.clev = i % 2 ? 'w_clev2' : 'w_clev1'; j = next(j.out, types[i], 4); js.push(j); }
         js.forEach((jj, i) => {
           poly(jj.frame, new THREE.SphereGeometry(32, 8, 4, 0, Math.PI * 2, 0, Math.PI / 2), [BX - 4, BY, -18], [1.15, 0.62, 0.85], i % 2 ? 'skin1b' : 'skin1', [-Math.PI / 2, 0, 0]);
-          for (const s of [-1, 1]) poly(jj.frame, new THREE.IcosahedronGeometry(5, 0), [BX - 4 + s * 12, BY + s * 6, -36], [1, 1, 1], i % 2 ? 'skin1' : 'skin1b');
-          for (const s of [-1, 1]) foot(jj.frame, [BX - 6, BY + s * 20, 23], 7);
+          for (const s of [-1, 0, 1]) poly(jj.frame, new THREE.IcosahedronGeometry(s ? 5 : 6.5, 0), [BX - 4 + s * 14, BY - s * 7, s ? -34 : -38], [1, 1, 1], 'w_dot');
+          for (const s of [-1, 1]) foot(jj.frame, [BX - 6, BY + s * 20, 23], 7.5, 'w_hub');
         });
         // tail
         poly(js[0].frame, new THREE.ConeGeometry(14, 46, 6), [-BACK - 22, BY, -4], [1, 1, 1], 'skin1', [0, 0, Math.PI / 2 - 0.15]);
+        poly(js[0].frame, new THREE.ConeGeometry(7, 18, 6), [-BACK - 50, BY, -1], [1, 1, 1], 'w_hub', [0, 0, Math.PI / 2 - 0.15]);
         // head
         const tip = beam(j.out, 8);
         const hg = new THREE.Group(); hg.position.set(tip[0] + 32, MID, -8); hg.rotation.x = -Math.PI / 2; j.out.add(hg);
@@ -316,8 +325,8 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         cheeks(hg, 28, -6, 24); smile(hg, [33, -10, 0], 8);
         for (const s of [-1, 1]) {
           const a = new THREE.Group(); a.position.set(-4, 28, s * 11); a.rotation.x = s * 0.3; hg.add(a);
-          poly(a, new THREE.CylinderGeometry(1.8, 1.8, 36, 5), [0, 18, 0], [1, 1, 1], 'skin1b');
-          poly(a, new THREE.IcosahedronGeometry(7, 0), [0, 38, 0], [1, 1, 1], 'C046');
+          poly(a, new THREE.CylinderGeometry(1.8, 1.8, 36, 5), [0, 18, 0], [1, 1, 1], 'w_house');
+          poly(a, new THREE.IcosahedronGeometry(7, 0), [0, 38, 0], [1, 1, 1], 'w_hub');
           this.wob.push(a);
         }
         this.js = js;
@@ -337,18 +346,19 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
       build(root) {
         const body = new THREE.Group(); body.position.set(0, 150, 0); root.add(body);
         this.lids = []; this.wob = [];
-        cyl(body, 80, 9, [0, 0, 0], 'pla', 48);
-        cyl(body, 80, 9, [0, -46, 0], 'pla', 48);
-        for (const a of [30, 150, 270]) rbox(body, [14, 40, 14], [40 * Math.cos(rad(a)), -23, 40 * Math.sin(rad(a))], 'pla', 3);
-        poly(body, new THREE.CylinderGeometry(74, 84, 12, 9), [0, -56, 0], [1, 1, 1], 'skin2b');
+        PAL = { house: 'k_house', clev: 'k_clev', hub: 'k_hub', beam: 'k_clev' };
+        cyl(body, 80, 9, [0, 0, 0], 'k_disc', 48);
+        cyl(body, 80, 9, [0, -46, 0], 'k_disc', 48);
+        for (const a of [30, 150, 270]) rbox(body, [14, 40, 14], [40 * Math.cos(rad(a)), -23, 40 * Math.sin(rad(a))], 'k_hub', 3);
+        poly(body, new THREE.CylinderGeometry(74, 84, 12, 9), [0, -56, 0], [1, 1, 1], 'k_hub');
         poly(body, new THREE.SphereGeometry(100, 9, 4, 0, Math.PI * 2, 0, Math.PI / 2), [0, 5, 0], [1, 0.3, 1], 'skin2');
-        for (const [x, z] of [[-40, 30], [-10, -55], [30, 50], [-60, -15], [45, -35]]) poly(body, new THREE.IcosahedronGeometry(8, 0), [x, 22, z], [1, 0.5, 1], 'skin2b');
+        for (const [x, z, r] of [[-40, 30, 9], [-10, -55, 7], [30, 50, 8], [-60, -15, 10], [45, -35, 6], [5, 10, 6]]) poly(body, new THREE.IcosahedronGeometry(r, 0), [x, 24, z], [1, 0.45, 1], 'belly');
         const legs = [];
         for (const ang of [90, 210, 330]) {
           const yaw = new THREE.Group(); yaw.rotation.y = -rad(ang); body.add(yaw);
           const j = joint(yaw, 'C046', [62, -3, 0], [[[1, 0, 0], 90]], -55);
           const e = beam(j.out, 92, 24, 18);
-          poly(j.out, new THREE.ConeGeometry(12, 34, 5), [e[0] + 14, MID, 0], [1, 1, 1], 'skin2', [0, 0, -Math.PI / 2]);
+          poly(j.out, new THREE.ConeGeometry(12, 34, 5), [e[0] + 14, MID, 0], [1, 1, 1], 'k_hub', [0, 0, -Math.PI / 2]);
           poly(j.out, new THREE.IcosahedronGeometry(12, 0), [e[0], MID, 0], [1, 1, 1], 'skin2b');
           legs.push(j);
         }
@@ -361,7 +371,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         }
         smile(body, [97, 4, 0], 10); cheeks(body, 92, 10, 30);
         const top = joint(body, 'C001', [0, 3 + 2 + S.H + 2.6, 0], [], 0);
-        rbox(top.out, [10, 22, 28], [CLEV + 1, MID, 0], 'pla', 4);
+        rbox(top.out, [10, 22, 28], [CLEV + 1, MID, 0], 'k_clev', 4);
         const shoulder = joint(top.out, 'C044', [CLEV + 6 + BACK, MID, -BY], [[[1, 0, 0], 90]], 0);
         const elbow = next(shoulder.out, 'C044', 30);
         const e = beam(elbow.out, 22);
@@ -371,6 +381,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         for (const s of [1, -1]) {
           const p = new THREE.Group(); p.position.set(18, s * 8, 0); cg.add(p);
           poly(p, new THREE.ConeGeometry(11, 52, 5), [24, 0, 0], [1, 0.75, 1], s > 0 ? 'skin2' : 'skin2b', [0, 0, -Math.PI / 2]);
+          poly(p, new THREE.ConeGeometry(5, 14, 5), [53, 0, 0], [1, 0.75, 1], 'k_hub', [0, 0, -Math.PI / 2]);
           for (let k = 0; k < 3; k++) poly(p, new THREE.ConeGeometry(2.5, 7, 4), [10 + k * 11, -s * 6, 0], [1, 1, 1], 'sclera', [0, 0, s > 0 ? Math.PI : 0]);
           jaws.push([p, s]);
         }
@@ -396,10 +407,11 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
       build(root) {
         const torso = new THREE.Group(); torso.position.set(0, 262, 0); root.add(torso);
         this.lids = []; this.wob = [];
-        rbox(torso, [128, 8, 76], [-30, 36, 0], 'pla', 4);
-        rbox(torso, [128, 8, 76], [-30, -34, 0], 'pla', 4);
-        for (const s of [-1, 1]) rbox(torso, [128, 74, 8], [-30, 1, s * 36], 'pla', 4);
-        rbox(torso, [8, 74, 76], [-92, 1, 0], 'pla', 4);
+        PAL = { house: 'h_house', clev: 'h_clev', hub: 'h_hub', beam: 'h_clev' };
+        rbox(torso, [128, 8, 76], [-30, 36, 0], 'h_house', 4);
+        rbox(torso, [128, 8, 76], [-30, -34, 0], 'h_house', 4);
+        for (const s of [-1, 1]) rbox(torso, [128, 74, 8], [-30, 1, s * 36], 'h_house', 4);
+        rbox(torso, [8, 74, 76], [-92, 1, 0], 'h_house', 4);
         poly(torso, new THREE.IcosahedronGeometry(64, 1), [-28, 6, 0], [1.22, 0.78, 0.78], 'skin3');
         poly(torso, new THREE.IcosahedronGeometry(30, 1), [16, -12, 0], [0.62, 0.85, 1.05], 'belly');
         smile(torso, [36, -6, 0], 9);
@@ -410,7 +422,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
           this.wob.push(arm);
         }
         // head
-        rbox(torso, [30, 30, 34], [42, 40, 0], 'pla', 5);
+        rbox(torso, [30, 30, 34], [42, 40, 0], 'h_hub', 5);
         const hg = new THREE.Group(); hg.position.set(74, 70, 0); torso.add(hg);
         poly(hg, new THREE.IcosahedronGeometry(30, 1), [0, 0, 0], [1, 0.95, 0.9], 'skin3');
         poly(hg, new THREE.IcosahedronGeometry(18, 1), [30, -8, 0], [1.4, 0.8, 0.85], 'belly');
@@ -427,9 +439,9 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         const hip = joint(torso, 'C001', [0, -30 - S.W / 2 - 3, 0], [[[1, 0, 0], 90]], -90);
         const knee = next(hip.out, 'C044', 22, 0);
         const ank = next(knee.out, 'C046', 18, 0);
-        rbox(ank.out, [12, 60, 108], [CLEV + 4, MID, 6], 'pla', 5);
-        poly(ank.out, new THREE.ConeGeometry(30, 34, 4), [CLEV + 6, MID, -58], [0.45, 1, 1], 'skin3', [-Math.PI / 2, 0, 0]);
-        poly(ank.out, new THREE.IcosahedronGeometry(16, 0), [CLEV + 6, MID, 64], [0.5, 1.4, 1], 'skin3b');
+        rbox(ank.out, [12, 60, 108], [CLEV + 4, MID, 6], 'h_house', 5);
+        poly(ank.out, new THREE.ConeGeometry(30, 34, 4), [CLEV + 6, MID, -58], [0.45, 1, 1], 'h_hub', [-Math.PI / 2, 0, 0]);
+        poly(ank.out, new THREE.IcosahedronGeometry(16, 0), [CLEV + 6, MID, 64], [0.5, 1.4, 1], 'h_hub');
         foot(ank.out, [CLEV + 12, MID - 20, 40], 7); foot(ank.out, [CLEV + 12, MID + 20, 40], 7);
         foot(ank.out, [CLEV + 12, MID - 20, -30], 7); foot(ank.out, [CLEV + 12, MID + 20, -30], 7);
         const t1 = joint(torso, 'C044', [-104, 10, 0], [[[1, 0, 0], 90]], 195);
@@ -437,7 +449,7 @@ td.num { font-variant-numeric: tabular-nums; font-family: var(--font-mono); }
         const t3 = next(t2.out, 'C046', 10);
         const e = beam(t3.out, 30, 24, 18);
         poly(t3.out, new THREE.IcosahedronGeometry(20, 1), [e[0] + 10, MID, 0], [1.4, 1, 1], 'skin3');
-        poly(t3.out, new THREE.ConeGeometry(12, 34, 6), [e[0] + 40, MID, 0], [1, 1, 1], 'belly', [0, 0, -Math.PI / 2]);
+        poly(t3.out, new THREE.ConeGeometry(12, 34, 6), [e[0] + 40, MID, 0], [1, 1, 1], 'h_hub', [0, 0, -Math.PI / 2]);
         this.j = { hip, knee, ank, t1, t2, t3 }; this.ears = ears; this.hg = hg;
       },
       animate(t) {
