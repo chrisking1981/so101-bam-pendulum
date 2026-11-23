@@ -16,6 +16,17 @@ command sequences of [Rhoban's public BAM STS3215 data](https://huggingface.co/b
 | USB hub, bus latency | Not a factor. Round trip 0.34 ms, and the servo flags *moving* 1.5 ms after a goal write | [C001](measurements/C001/README.md#finding-1-the-extra-delay-comes-from-the-servo-firmware-not-from-usb) |
 | Servo voltage register | Unreliable: it reads about 0.3 V low at idle and spikes to 17.8 V during motion. Do not use it as a guard | [C001](measurements/C001/README.md) |
 
+All six servos of one SO-101 leader arm (Seeed kit SKU 114993667), each with the acceleration profile stored off in EEPROM:
+
+| Joint | Bus ID | Type | 5° step time (P = 32) | Data |
+|---|---:|---|---:|---|
+| 1 | 1 | C044 1:191 | 36.4 ms | [C044 unit 2](measurements/C044/20261123-163134-unit2-id1-noload-profile-off/README.md) |
+| 2 | 2 | C001 1:345 | 59.0 ms | [C001](measurements/C001/README.md) |
+| 3 | 3 | C044 1:191 | 35.7 ms | [C044 unit 1](measurements/C044/20261123-161907-noload-profile-off/README.md) |
+| 4 | 4 | C046 1:147 | 31.5 ms | [C046 unit 1](measurements/C046/20261123-163853-noload-profile-off/README.md) |
+| 5 | 5 | C046 1:147 | 32.6 ms | [C046 unit 3](measurements/C046/20261123-165146-unit3-id5-noload-profile-off/README.md) |
+| 6 (gripper) | 6 | C046 1:147 | 32.6 ms | [C046 unit 2](measurements/C046/20261123-164605-unit2-id6-noload-profile-off/README.md) |
+
 Pendulum (loaded) runs and BAM fits have not been done yet. The earlier C044 runs in `measurements/C044/2026112*-horn-*` were made with a 5 V
 adapter, D = 32, the profile on and about 40 Hz logging, so they are not comparable with the runs above.
 
