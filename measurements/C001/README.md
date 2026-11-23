@@ -5,7 +5,8 @@ command sequences of Rhoban's public STS3215 no-load recordings. With the servo 
 found it, the response started about 35–50 ms later than Rhoban's. The cause is
 the firmware **acceleration profile** (register 85 = 254, probably written by LeRobot), not the
 USB hub and not the servo hardware. With the profile disabled (85 = 0, then 41 = 0),
-15 of 20 runs match Rhoban's traces within 0.1–0.9° mean. This also suggests that Rhoban's
+all 20 runs match Rhoban's traces: 0.1–0.9° mean on 15 runs and 0.4–2.1° on the 5 fast ones. Those 5
+had to be re-recorded once the profile was stored off in EEPROM (see *Update 2* below). This also suggests that Rhoban's
 servo was a C001-type unit recorded without this profile. This is an inference, because Rhoban
 does not document the subtype.
 
@@ -95,8 +96,7 @@ sin_time_square 8.3–16.6.
 - `sin_time_square` at kp 16 and 32, and to a lesser extent `brutal` at kp 8/16 and `sin_sin` at kp 4: our servo
   lags more and overshoots slightly at high speed. Best-fit time lag for sin_time_square kp 16: ours 235 ms, Rhoban
   112 ms. Ours at kp 16 is slower than ours at kp 8, which is not monotonic.
-- One hypothesis is supply voltage: our servo reported about 7.1 V idle, Rhoban logged vin 7.4, and top speed scales
-  with voltage. **Untested.**
+- ~~One hypothesis is supply voltage.~~ This was tested and withdrawn; see *Update 2*.
 - The servo's voltage register is unreliable during motion. It reported 6.7–17.8 V while the RD6006
   read 7.31–7.39 V. Do not use it as a safety guard.
 - Bus timeouts happened twice, both during a hard 90° step at high current. The recorder now retries them.
@@ -120,6 +120,33 @@ After that the RD6006 output was switched off for 3 s and on again.
 So register 85 = 0 persists across power cycles and takes effect at power-up without a fresh write to 41 (this unit,
 firmware 3.10). **LeRobot writes 254 to 85 and 41 on every connect**, so after using LeRobot with this servo the profile is on again
 until power-off. Runtime code should read 85/41 back at startup and refuse to run on a mismatch.
+
+## Update 2: the 5 deviating runs were the profile, not supply voltage
+
+The 5 runs listed under *Not explained yet* were recorded again after the profile had been stored off in EEPROM.
+No RAM toggling of 85/41 was done for these runs.
+
+| Run | Profile-off batch (RAM toggle) | 7.7 V supply | 7.4 V, profile off in EEPROM |
+|---|---:|---:|---:|
+| brutal kp 8 | 2.33 | 0.43 | 0.68 |
+| brutal kp 16 | 2.34 | 0.29 | 0.38 |
+| sin_sin kp 4 | 2.81 | 0.70 | 0.91 |
+| sin_time_square kp 16 | 16.65 | 1.96 | 1.96 |
+| sin_time_square kp 32 | 15.64 | 1.34 | 2.07 |
+
+Values are mean |ours − Rhoban| in degrees. At 7.4 V the runs are about as good as at 7.7 V, so
+**supply voltage is not the explanation** and the voltage hypothesis above is withdrawn. In the RAM-toggle batch, these 5 runs had almost exactly the
+same deviation as the same runs in the profile-*on* batch (16.65 vs 16.56, 2.33 vs 2.32, 2.81 vs 2.80). So the
+profile was most likely still active in those runs, even though the recorder had written 85 = 0, then 41 = 0 before each
+of them. This is inferred, not proven. **Treat these 5 runs in
+[20261123-154618-noload-profile-off](20261123-154618-noload-profile-off/) as invalid** and use
+[20261123-160744-rerun-eeprom-profile-off](20261123-160744-rerun-eeprom-profile-off/) instead.
+
+- The servo reports about 0.3 V less than the RD6006 output even at 21 mA idle. That is too much for cable drop, so it is most likely an
+  offset in the servo's own voltage measurement.
+- The 7.7 V runs are in [20261123-160641-voltage-test-7v7](20261123-160641-voltage-test-7v7/). The RD6006 was set back to 7.40 V afterwards.
+- As a result, `record_sts.py` no longer toggles the profile by default. It reads 85/41 back and logs them in
+  `accel_profile_85_41`.
 
 ## What this means for simulation (sim2real)
 
@@ -148,8 +175,7 @@ uv run python -m bam.feetech.replay_rhoban --rhoban <dir with raw/*.json> --mass
 uv run python -m bam.feetech.compare_rhoban --ours data_raw/c001_noload --rhoban <dir>/raw --plot cmp.png
 ```
 
-`record_sts.py` disables the profile during a run by default (`--accel-profile 0 0`) and restores the previous 85/41
-values afterwards. Pass `--accel-profile 254 0` to record with the profile on.
+`record_sts.py` leaves registers 85/41 as they are stored in the servo and logs them. `--accel-profile R85 R41` sets them temporarily in RAM, but that proved unreliable. Store the setting in EEPROM instead.
 
 ## References
 

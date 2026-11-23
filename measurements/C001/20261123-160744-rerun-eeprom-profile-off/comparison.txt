@@ -1,0 +1,6 @@
+trajectory        kp  ours err  rhob err  |ours-rhob| mean     max   (degrees)
+brutal             8      8.67      8.57              0.68    2.95
+brutal            16      6.99      6.77              0.38    4.94
+sin_sin            4     16.16     15.56              0.91    2.40
+sin_time_square   16     21.15     20.07              1.96    9.17
+sin_time_square   32     18.04     17.02              2.07    9.94

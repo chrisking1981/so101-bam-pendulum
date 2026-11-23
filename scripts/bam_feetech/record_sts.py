@@ -22,8 +22,8 @@ p.add_argument("--motor", default="sts3215")
 p.add_argument("--trajectory", default="lift_and_drop")
 p.add_argument("--logdir", required=True)
 p.add_argument("--replay", help="Rhoban raw log: replay its exact goal_position/torque_enable sequence")
-p.add_argument("--accel-profile", type=int, nargs=2, default=[0, 0], metavar=("R85", "R41"),
-               help="firmware accel profile during recording; default 0 0 = off (as Rhoban)")
+p.add_argument("--accel-profile", type=int, nargs=2, default=None, metavar=("R85", "R41"),
+               help="temporarily set the firmware accel profile (RAM). Default: leave it as stored in the servo and only log it. RAM toggling proved unreliable, so prefer storing 85=0/41=0 in EEPROM")
 p.add_argument("--zero-here", action="store_true",
                help="Use current position as zero (no-load runs only, no gravity reference needed)")
 a = p.parse_args()
@@ -81,7 +81,9 @@ def read():
 
 try:
     m.open_limits()
-    m.accel_profile(*a.accel_profile)
+    if a.accel_profile is not None:
+        m.accel_profile(*a.accel_profile)
+    acc_used = m.read_accel_profile()
     m.set_gains(a.kp, 0)
 
     # Move gently to the trajectory start
@@ -99,7 +101,7 @@ try:
     torque = en
 
     data = dict(mass=a.mass, arm_mass=a.arm_mass, length=a.length, kp=a.kp, vin=a.vin,
-                motor=a.motor, trajectory=a.trajectory, servo_id=a.id, zero_raw=int(zero), accel_profile_85_41=list(a.accel_profile),
+                motor=a.motor, trajectory=a.trajectory, servo_id=a.id, zero_raw=int(zero), accel_profile_85_41=list(acc_used),
                 replay_of=os.path.basename(a.replay) if a.replay else None, entries=[])
     start = time.time()
     while (t := time.time() - start) < traj.duration:
@@ -127,7 +129,8 @@ try:
 finally:
     m.torque(False)
     m.set_gains(orig_p, orig_d)
-    m.accel_profile(*orig_acc)
+    if a.accel_profile is not None:
+        m.accel_profile(*orig_acc)
 
 n = len(data["entries"])
 fn = f"{a.logdir}/{datetime.datetime.now():%Y-%m-%d_%Hh%Mm%S}_{a.trajectory}_kp{a.kp}.json"
