@@ -30,7 +30,7 @@ The simulation must use the parts as built:
 
 | Part | Version | Notes |
 |---|---|---|
-| Lower link (Nano) | commit `32bb5cd`: **6 mm hub** (before the 4 mm hub fix), 1.4 mm pin holes | pin holes widened by hand until the pins fit. With the 6 mm hub, M3 × 6 screws do not reach servo 2's horn: use **M3 × 8 or M3 × 10**, or reprint the current version |
+| Lower link (Nano) | commit `32bb5cd`: **6 mm hub** (before the 4 mm hub fix), 1.4 mm pin holes | pin holes widened by hand until the pins fit. The four horn-screw holes were counterbored by hand to about half the thickness, so the M3 × 6 heads sit recessed and the screws grip servo 2's horn |
 | Upper link (servo pocket) | current version: 4 mm hub, body screws from below | |
 
 Masses: weigh both links and the lower link with the Nano mounted, and enter them in `double_pendulum_params.json`.

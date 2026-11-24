@@ -9,7 +9,7 @@
  "servo2_axis_height_above_link1_bottom_mm": 42.4,
  "note": "link masses depend on infill: weigh the printed parts and put the real values here",
  "as_built": {
-  "lower_link": "commit 32bb5cd: 6 mm hub (needs M3x8/M3x10 horn screws), 1.4 mm pin holes widened by hand; hub geometry differs from the current file",
+  "lower_link": "commit 32bb5cd: 6 mm hub; the 4 horn-screw holes counterbored by hand to ~3 mm so M3x6 screws grip the horn; 1.4 mm pin holes widened by hand",
   "upper_link": "current version (4 mm hub, body screws)",
   "masses_g": "to be weighed"
  }
