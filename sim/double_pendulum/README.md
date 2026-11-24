@@ -53,3 +53,6 @@ the model check above by less than 0.01°.
   The lessons from the one-servo test (speed lag, smoothness) were already in the training.
 - Loop on the Mac with two servos and the Nano: 20.00 ms period (max 20.00), 1.8 ms work per tick (max 4.4), fresh IMU data every tick.
 - Nano tilt against hip + knee during the run: 0.69° mean (includes fast moves).
+
+**Second real run** (same policy): real vs sim 0.20° / 0.27° mean (hip / knee), 100% inside the randomized band, no oscillation.
+Run 1 vs run 2 differ by only 0.09° / 0.10° mean, so the real arm is very repeatable.
