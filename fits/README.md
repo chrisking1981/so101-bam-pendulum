@@ -20,3 +20,8 @@ The kp 8 logs were held out for validation (`--validation_kp 8`).
 ## C046 (1:147)
 
 See [C046/README.md](C046/README.md).
+
+## STS3215 12 V follower (1:345)
+
+See [STS3215-12V/README.md](STS3215-12V/README.md). m5 predicts two unseen units to about 0.3° (except the torque-off release in `lift_and_drop`).
+Rhoban's 7.4 V C001 model is 8° off on this servo.
