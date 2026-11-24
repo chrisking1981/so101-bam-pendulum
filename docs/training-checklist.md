@@ -50,7 +50,13 @@ through BAM's friction budget (`friction_scale`), not MuJoCo's `dof_frictionloss
 | Projected gravity in simulation | the true gravity from MuJoCo, plus a **slowly varying tilt error of ±2°** (and the ±0.01 noise); not white noise | filter test | ±0.01 noise |
 | IMU latency | ~2 ms behind the servo encoder readout | IMU latency | obs delay 0–20 ms |
 | IMU mounting error | randomize up to ~6° (random axis); a systematic offset is calibrated at start-up | | up to 6° |
-| Joint velocity | 1-step lag (firmware computes it); joint pos noise ±0.001 rad, vel ±0.25 rad/s | | same |
+| **Joint velocity (servo speed register)** | **one control step (20 ms) late and quantised to 0.0767 rad/s** (measured); without this in sim the policy oscillated at 8.5 Hz on the real servo. Joint pos noise ±0.001 rad | [pipeline test](../sim/pendulum_policy/README.md) | 1-step lag, vel noise ±0.25 |
+
+## Pipeline test on one servo (done)
+
+The complete chain (BAM sim + DR → PPO → ONNX → 50 Hz loop on the Mac with servo + Nano) was tested on the pendulum: real and sim agree to
+0.24° mean, 1.4° max ([details](../sim/pendulum_policy/README.md)). Also needed: a penalty on action changes strong enough that the policy
+holds still in simulation, and check in simulation for oscillation before running on hardware.
 
 ## Policy and training practice (from Microduck's playbook)
 
@@ -62,7 +68,7 @@ through BAM's friction budget (`friction_scale`), not MuJoCo's `dof_frictionloss
 
 ## Still to measure
 
-- [ ] Whole-loop latency on the Mac at 50 Hz (IMU read + servo read + policy + write).
+- [x] Whole-loop timing on the Mac at 50 Hz, one servo: period 20.00 ms (max 20.3), 1 ms work, IMU data 0.9 ms old ([pipeline test](../sim/pendulum_policy/README.md)). Repeat with all servos on the bus.
 - [ ] Supply voltage at the servos with several servos loaded at once (sag).
 - [ ] Vibration on the robot body with all leg servos moving, and the filter's real-world output.
 - [ ] Gyro bias drift over 10+ minutes as the board warms up.
