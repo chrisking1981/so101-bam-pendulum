@@ -8,7 +8,7 @@ The encoder and load were logged at ~2.3 kHz ([`scripts/bam_feetech/backlash_hol
 |---|---:|---:|---:|---:|
 | ID 3 | ~1 mm | ~0.57° | 1.06° | ±5.6% |
 | ID 2 | ~1 mm | ~0.57° | 1.32° | −6.4…+7.2% |
-| ID 6 | ~1 mm | ~0.57° | ~1.8° | ±9% |
+| ID 6 | ~1 mm | ~0.57° | 1.93° | −8.8…+9.6% |
 
 ## Result
 
