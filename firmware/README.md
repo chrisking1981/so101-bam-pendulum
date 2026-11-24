@@ -21,6 +21,9 @@ First test (2026-11-24), board lying still on the table, quiet part of a 10 s re
 | Accel noise (std) | 0.011 / 0.013 / 0.014 m/s² |
 | |g| | 9.94 m/s² |
 
+Repeat run, 20 s, board taped flat on the table: tilt 0.28° / −0.31°, gyro noise 0.0020 / 0.0020 / 0.0015 rad/s, gyro bias
++0.21 / −9.75 / −2.65 °/s (stable between runs), |g| = 10.01 m/s² (about 2% accelerometer scale error), longest host receive gap 13 ms.
+
 For comparison, Microduck's training uses uniform noise of ±0.03 rad/s on the gyro and ±0.01 on the gravity vector. The measured sensor
 noise is well below that. The host received one gap of ~60 ms in the 10 s, at a moment when the board was being touched. The receive
 timing will be checked again in a longer run.
