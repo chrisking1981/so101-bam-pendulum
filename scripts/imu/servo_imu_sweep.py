@@ -61,5 +61,6 @@ finally:
 e = np.array(enc)
 np.savez(a.out, t_enc=e[:, 0], pos=e[:, 1], spd=e[:, 2], load=e[:, 3], goal_deg=e[:, 4], zero=zero,
          t_imu=np.array([x[1] for x in ims]), t_imu_dev=np.array([x[0] for x in ims]),
-         gyro=np.array([x[2] for x in ims]), acc=np.array([x[3] for x in ims]))
+         gyro=np.array([x[2] for x in ims]), acc=np.array([x[3] for x in ims]),
+         **({"up": np.array([x[4] for x in ims])} if ims and ims[0][4] is not None else {}))
 print(f"encoder samples {len(e)}, IMU samples {len(ims)}, saved {a.out}")

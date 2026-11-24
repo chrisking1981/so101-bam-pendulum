@@ -41,3 +41,26 @@ moment the goal-position write returns.
 - For the simulation: the BAM m5 fit has a 5 ms pure command delay. The rest of the ~15 ms is the motor and firmware response, which BAM
   already models. The RL action delay should therefore be randomized around a few milliseconds on top of BAM. Microduck uses 15–30 ms,
   but without our own measurement. A whole-loop measurement on the robot (sensor read + policy + write at 50 Hz) is still to do.
+
+## On-board tilt filter (firmware v2)
+
+The Nano now calibrates its gyro bias at start-up (2 s still) and runs a Mahony filter (gyro + accelerometer, KP = 0.5 /s) at every
+sample. It sends the filtered "up" vector together with the raw data ([firmware](../../../firmware/README.md)). The same sweep and steps
+were repeated, and the filtered angle was compared with the servo encoder
+([`scripts/imu/analyse_filter.py`](../../../scripts/imu/analyse_filter.py)).
+
+![filter](filter_vs_encoder.png)
+
+| Angle source | Slow sweep: mean / max error | ±30° steps: mean / max error | Error while moving (steps) |
+|---|---|---|---|
+| **Filtered on the Nano** | **0.85° / 1.8°** | **0.54° / 2.0°** | **0.8°** |
+| Raw accelerometer | 3.3° / 26° | 3.2° / 82° | 22° |
+| Accelerometer averaged over 20 ms | 0.9° / 5.3° | 2.4° / 59° | 17° |
+
+- Still, after calibration, the gyro bias is 0.01°/s (was −9.8°/s) and the filtered up vector agrees with the accelerometer to 0.12°.
+- **The filter is needed.** In fast moves the accelerometer measures the arm's own acceleration, not gravity: up to 82° wrong, and a 20 ms
+  average does not help (59°). The filtered angle stays within 2° of the encoder.
+- **No measurable lag** of the filtered angle (within a few ms of the encoder).
+- The remaining error is a slow ±1–2° wander: after fast moves the accelerometer correction (time constant ~2 s) pulls it back. Plus about
+  1° from accelerometer scale and mounting. In simulation, model it as a slowly varying tilt error of about ±2° on the projected gravity,
+  not as white noise.

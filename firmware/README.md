@@ -2,7 +2,11 @@
 
 ## nano33_imu
 
-Streams the LSM6DS3 IMU of an Arduino Nano 33 IoT over USB (416 Hz, ±4 g, ±1000 °/s, raw counts as text lines `t_us,gx,gy,gz,ax,ay,az`).
+Streams the LSM6DS3 IMU of an Arduino Nano 33 IoT over USB (416 Hz, ±4 g, ±1000 °/s).
+**v2 (current):** calibrates the gyro bias at start-up (keep it still for 2 s, or send `c`), runs a Mahony filter on the board
+(KP = 0.5 /s, set with `k<value>`) and sends `t_us,gx,gy,gz,ax,ay,az,ux,uy,uz`: bias-corrected gyro and raw accel in counts, and the
+filtered up vector × 10000. Why on the board: the filter keeps running through USB hiccups on the Mac, as on Microduck's IMU chip.
+(v1 sent only the raw `t_us,gx,gy,gz,ax,ay,az`; the reader accepts both.)
 The registers are written directly, without the Arduino_LSM6DS3 library, which is limited to 104 Hz.
 
 ```

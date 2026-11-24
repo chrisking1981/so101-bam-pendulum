@@ -43,10 +43,11 @@ through BAM's friction budget (`friction_scale`), not MuJoCo's `dof_frictionloss
 |---|---|---|---|
 | Rate | 427 Hz | [firmware](../firmware/README.md) | — |
 | Gyro noise | 0.002 rad/s std measured → train with **±0.03 rad/s** uniform | still test | ±0.03 rad/s |
-| Gyro bias | up to −9.8 °/s, stable → **calibrate at start-up** (1–2 s still), it cannot be randomized away | still tests | runtime calibration |
+| Gyro bias | up to −9.8 °/s, stable → **calibrated at start-up on the Nano** (2 s still, firmware v2), 0.01 °/s after | still tests | the chip estimates its own bias |
 | Gravity vector noise | train with ±0.01 (unit vector) | — | ±0.01 |
-| **Drivetrain vibration** | 117.5 Hz, ~1.5 m/s² while a servo moves (20°/s) → the accelerometer angle jumps ±10–25° per raw sample | [IMU on arm](../measurements/IMU/20261124-nano-on-arm-id6/README.md) | — |
-| → required on the robot | average all IMU samples in each 20 ms step, and/or a complementary filter (gyro + accel) for the gravity vector; **use the same filter in simulation** | | — |
+| **Drivetrain vibration** | 117.5 Hz, ~1.5 m/s² while a servo moves (20°/s) → the accelerometer angle jumps ±10–25° per raw sample; in fast moves the arm's own acceleration gives up to 82° | [IMU on arm](../measurements/IMU/20261124-nano-on-arm-id6/README.md) | — |
+| → solution (done) | **on-board Mahony filter on the Nano** (firmware v2): filtered tilt within 2° of the encoder (mean 0.5–0.85°), no measurable lag. A 20 ms average is not enough (59° in fast moves) | [filter test](../measurements/IMU/20261124-nano-on-arm-id6/README.md#on-board-tilt-filter-firmware-v2) | chip does the fusion (LSM6DSV16X SFLP) |
+| Projected gravity in simulation | the true gravity from MuJoCo, plus a **slowly varying tilt error of ±2°** (and the ±0.01 noise); not white noise | filter test | ±0.01 noise |
 | IMU latency | ~2 ms behind the servo encoder readout | IMU latency | obs delay 0–20 ms |
 | IMU mounting error | randomize up to ~6° (random axis); a systematic offset is calibrated at start-up | | up to 6° |
 | Joint velocity | 1-step lag (firmware computes it); joint pos noise ±0.001 rad, vel ±0.25 rad/s | | same |
