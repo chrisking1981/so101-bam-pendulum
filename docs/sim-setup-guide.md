@@ -21,6 +21,12 @@ Status (2026-11-23): all six SO-101 leader servos measured without load; C046, C
 - **Simulation:** Rhoban's BAM STS3215 model and all fits in this repo assume the profile is **off**. If a robot has to run with it on,
   the actuator model needs an extra acceleration-limited target, and the identification must be repeated with the profile on.
 
+## 1b. Check the torque and current limits too
+
+LeRobot sets the **gripper** servo of the follower to `max_torque_limit` = 500 (a 50% PWM cap), `protection_current` = 250 and `overload_torque` = 25. A follower
+gripper servo reused in a robot joint has half the speed on fast moves ([12 V ID 6](../measurements/STS3215-12V/20261124-113443-id6-gripper-noload-torque-limited/README.md)).
+Read these registers on every servo, set them equal, and include them in the startup check.
+
 ## 2. One actuator model per servo type
 
 - The gear ratio changes the behaviour too much for one model plus randomization. Under the same 450 g load, `sin_time_square` at kp 32 lags
