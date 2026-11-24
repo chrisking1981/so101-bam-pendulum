@@ -13,8 +13,8 @@ def servo_mesh(name):
     return trimesh.load(D / f"servo_{name}.stl")
 links = {"torso": [parts["torso"], servo_mesh("roll_l"), servo_mesh("roll_r")]}
 for s in "lr":
-    links[f"hip_{s}"] = [parts[f"hip_{s}"], servo_mesh(f"pitch_{s}")]
-    links[f"leg_{s}"] = [parts[f"leg_{s}"], servo_mesh(f"ankle_{s}")]
+    links[f"hip_{s}"] = [parts[f"hip_{s}"]]                                              # cross bracket only
+    links[f"leg_{s}"] = [parts[f"leg_{s}"], servo_mesh(f"pitch_{s}"), servo_mesh(f"ankle_{s}")]  # hip-pitch servo hangs in the leg
     links[f"foot_{s}"] = [parts[f"foot_{s}"]]
 links = {k: trimesh.boolean.union(v, engine="manifold") if len(v) > 1 else v[0] for k, v in links.items()}
 for k, m in links.items():

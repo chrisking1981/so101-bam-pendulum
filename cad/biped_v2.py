@@ -35,9 +35,9 @@ BACK_AT_HOLES, FRONT_AT_HOLES = -15.9, 15.9
 CLR = 0.25
 # ---------------------------------------------------------------- design choices
 HY = 35.0                     # half hip width (servo axes at y = +-35)
-Z_ANKLE, L_LEG, H_HIP = 22.0, 110.0, 56.0
-Z_PITCH = Z_ANKLE + L_LEG     # 132
-Z_ROLL = Z_PITCH + H_HIP      # 188
+Z_ANKLE, L_LEG, H_HIP = 22.0, 100.0, 39.0
+Z_PITCH = Z_ANKLE + L_LEG     # 122
+Z_ROLL = Z_PITCH + H_HIP      # 161: roll and pitch axes only 39 mm apart (was 56 with the pitch servo standing in the hip)
 PLATE, WALL, HUB_R = 4.0, 3.0, 12.5
 M3, M3_CENTER, PITCH_R = 3.4, 6.5, 7.0
 M2_CLEAR, M2_HEAD, UNDER_HEAD = 2.2, 4.6, 2.5
@@ -121,7 +121,7 @@ def holder(sv, x_lo=HOLD_FROM):
 servos = {}
 for side, s in (("l", 1), ("r", -1)):
     servos[f"roll_{side}"] = Servo(f"roll_{side}", (0, s * HY, Z_ROLL), ez=(1, 0, 0), ex=(0, 0, -1))      # body up, horns front/back
-    servos[f"pitch_{side}"] = Servo(f"pitch_{side}", (0, s * HY, Z_PITCH), ez=(0, s, 0), ex=(0, 0, -1))  # body up, front horn outward
+    servos[f"pitch_{side}"] = Servo(f"pitch_{side}", (0, s * HY, Z_PITCH), ez=(0, s, 0), ex=(0, 0, 1))   # body DOWN in the thigh, front horn outward
     servos[f"ankle_{side}"] = Servo(f"ankle_{side}", (0, s * HY, Z_ANKLE), ez=(0, s, 0), ex=(0, 0, -1))
 
 
@@ -151,53 +151,61 @@ def finish(solid, cuts):
 
 # ---------------------------------------------------------------- parts
 def make_torso():
+    """A closed box around the far ends of both hip-roll servos: front and back plates over the full width, deck on top with the
+    Nano seat and four M3 holes for a head or extra weight, a bottom between the servos with two cable holes."""
     sol, cuts = None, []
     for side in "lr":
         h, c = holder(servos[f"roll_{side}"]); sol = h if sol is None else sol + h; cuts.append(c)
-    # bridge between the two holders: top deck over both far ends, and front/back webs
-    z_top = Z_ROLL + (SHAFT_X - CASE["x"][0]) + CLR            # far end of the roll servos
-    # inset 0.5 mm from the holder plates' outer faces so no faces/edges coincide (keeps the mesh manifold)
-    deck = box(CASE["zb"] - CLR - WALL + 0.5, CASE["zf"] + CLR + WALL - 0.5, -HY, HY, z_top + 0.3, z_top + WALL - 0.3)
-    sol += deck
-    # Nano seat on the deck: one 1.6 mm hole per header pin, rows 15.24 apart along x
-    for yy in (-7.62, 7.62):
+    xf0, xf1 = CASE["zf"] + CLR, CASE["zf"] + CLR + WALL            # front plate (roll servo front face looks along +x)
+    xb0, xb1 = CASE["zb"] - CLR - WALL, CASE["zb"] - CLR             # back plate
+    yw = HY + CASE["y"][1] + CLR + WALL
+    z_lo = Z_ROLL + (SHAFT_X - (HOLD_FROM)) - 0.0                    # holders start 18.5 above the roll axis
+    z_hi = Z_ROLL + (SHAFT_X - CASE["x"][0]) + CLR + WALL            # top of the holder end walls
+    sol += box(xf0, xf1, -yw, yw, z_lo, z_hi) + box(xb0, xb1, -yw, yw, z_lo, z_hi)
+    sol += box(xb0, xf1, -yw, yw, z_hi - WALL, z_hi)                                      # deck
+    yin = HY - CASE["y"][1] - CLR - WALL
+    sol += box(xb0, xf1, -yin, yin, z_lo, z_lo + WALL)                                     # bottom between the servos
+    for yy in (-9.0, 9.0):                                                                  # cable holes in the bottom
+        cuts.append(cyl((0, yy, z_lo - 1), (0, 0, 1), 5.0, 0, WALL + 2))
+    for yy in (-7.62, 7.62):                                                                # Nano: one hole per header pin
         for k in range(15):
             xx = -43.16 / 2 + 3.81 + 2.54 * k
-            cuts.append(box(xx - 0.8, xx + 0.8, yy - 0.8, yy + 0.8, z_top - 1, z_top + WALL + 1))
+            cuts.append(box(xx - 0.8, xx + 0.8, yy - 0.8, yy + 0.8, z_hi - WALL - 1, z_hi + 1))
+    for xx in (xb0 + 5, xf1 - 5):                                                           # M3 holes for a head / extra weight
+        for yy in (-yw + 6, yw - 6):
+            cuts.append(cyl((xx, yy, z_hi - WALL - 1), (0, 0, 1), M3 / 2, 0, WALL + 2))
     return finish(sol, cuts)
 
 
 def make_hip(side):
+    """Cross bracket: one clevis on the hip-roll horns (plates across x), one on the hip-pitch horns (plates across y), joined by a
+    frame plate between the two axes. The hip-pitch servo body hangs down in the leg, so no holder can swing into anything here."""
     roll, pitch = servos[f"roll_{side}"], servos[f"pitch_{side}"]
-    h, hc = holder(pitch)
-    z_top_pitch = Z_PITCH + (SHAFT_X - CASE["x"][0]) + CLR + WALL
-    # the two roll horn plates come down to the pitch holder; tie them to the holder with side webs
     s = 1 if side == "l" else -1
-    y0, y1 = s * HY - (CASE["zf"] + CLR + WALL), s * HY + (CASE["zf"] + CLR + WALL)
-    web = box(BACK_HORN - PLATE, FRONT_HORN + PLATE, min(y0, y1), max(y0, y1), Z_PITCH + 18.5, z_top_pitch)
-    body = clevis(roll, Z_PITCH + 18.5, web) + h
-    return finish(body, [hc, horn_holes(roll, FRONT_HORN, 1), horn_holes(roll, BACK_HORN, -1),
-                         # clear the pitch servo case inside the web
-                         pitch.location() * box(CASE["x"][0] - CLR, HOLD_FROM + 2, CASE["y"][0] - CLR, CASE["y"][1] + CLR, CASE["zb"] - CLR, CASE["zf"] + CLR)])
+    z_frame0, z_frame1 = Z_ROLL - 21.0, Z_ROLL - 17.0          # below the roll servo case sweep, above the pitch servo case sweep
+    ys = [s * HY + s * (BACK_HORN - PLATE), s * HY + s * (FRONT_HORN + PLATE)]
+    frame = box(BACK_HORN - PLATE, FRONT_HORN + PLATE, min(ys), max(ys), z_frame0, z_frame1)
+    body = clevis(roll, z_frame0, frame) + clevis(pitch, z_frame1, frame)
+    return finish(body, [horn_holes(roll, FRONT_HORN, 1), horn_holes(roll, BACK_HORN, -1),
+                         horn_holes(pitch, FRONT_HORN, 1), horn_holes(pitch, BACK_HORN, -1)])
 
 
 def make_leg(side):
+    """Thigh and shank in one: holds the hip-pitch servo (far end down) at the top and the ankle servo (far end up) at the bottom,
+    joined by two side walls on the servo faces and a cross web in the middle."""
     pitch, ankle = servos[f"pitch_{side}"], servos[f"ankle_{side}"]
-    h, hc = holder(ankle)
-    z_top_ankle = Z_ANKLE + (SHAFT_X - CASE["x"][0]) + CLR + WALL
+    hp, cp = holder(pitch); ha, ca = holder(ankle)
     s = 1 if side == "l" else -1
-    # the front horn faces outward: world y = s*HY + s*S.z (s = -1 mirrors the right leg)
-    yo = [s * HY + s * FRONT_HORN, s * HY + s * (FRONT_HORN + PLATE)]
-    yi = [s * HY + s * BACK_HORN, s * HY + s * (BACK_HORN - PLATE)]
-    # side plates continue down over the ankle holder; join plates and holder with a bridge under the pitch hub
-    bridge = box(-HUB_R, HUB_R, min(yo + yi), max(yo + yi), Z_PITCH - 40, Z_PITCH - 33)
-    body = clevis(pitch, Z_ANKLE + 18.5, bridge) + h
-    # webs between the side plates and the holder plates (the holder plates sit about 2 mm further in)
-    for ys, face in ((yo, CASE["zf"] + CLR), (yi, CASE["zb"] - CLR)):
-        yy = ys + [s * HY + s * face]
-        body += box(-HUB_R, HUB_R, min(yy), max(yy), Z_ANKLE + 18.5, z_top_ankle)
-    return finish(body, [hc, horn_holes(pitch, FRONT_HORN, 1), horn_holes(pitch, BACK_HORN, -1),
-                         ankle.location() * box(CASE["x"][0] - CLR, HOLD_FROM + 2, CASE["y"][0] - CLR, CASE["y"][1] + CLR, CASE["zb"] - CLR, CASE["zf"] + CLR)])
+    xw = CASE["y"][1] + CLR + WALL                                   # holder half width across x
+    z0, z1 = Z_ANKLE + (SHAFT_X - CASE["x"][0]) - 17.0, Z_PITCH - (SHAFT_X - CASE["x"][0]) + 17.0
+    body = hp + ha
+    for face, sgn in ((CASE["zf"] + CLR, 1), (CASE["zb"] - CLR, -1)):
+        yy = [s * HY + s * face, s * HY + s * (face + sgn * WALL)]
+        body += box(-xw, xw, min(yy), max(yy), z0, z1)
+    yy = [s * HY + s * (CASE["zb"] - CLR - WALL), s * HY + s * (CASE["zf"] + CLR + WALL)]
+    zm = 0.5 * (Z_ANKLE + Z_PITCH)
+    body += box(-xw, xw, min(yy), max(yy), zm - 2.0, zm + 2.0)
+    return finish(body, [cp, ca])
 
 
 def make_foot(side):

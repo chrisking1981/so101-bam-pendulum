@@ -41,7 +41,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
     <div class="hint">Slepen = draaien · scrollen of knijpen = zoomen · rechts slepen = schuiven</div></div>
   <div class="panel">
     <h1>Biped versie 2</h1>
-    <p class="note">Zes STS3215-servo's. Elk gewricht zit in een beugel die aan beide horns vastzit (voor en achter). De volgende servo staat rechtop en wordt aan het uiteinde vastgehouden met 4 kleine schroefjes, zoals bij de SO101.</p>
+    <p class="note">Zes STS3215-servo's. Elk gewricht zit vast aan beide horns (voor en achter). Het heupstuk is een kruisbeugel tussen de heup-zijwaarts-servo en de heup-servo; die laatste hangt omgekeerd in het dijbeen, zodat de twee draaipunten maar 39 mm uit elkaar zitten. De romp is een dichte doos met de Nano erop.</p>
     <div>
       <p class="label">Gewrichten</p>
       <div id="joints"></div>
@@ -134,7 +134,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   }).catch(() => { status.textContent = 'Het model kon niet geladen worden.'; });
 
   function view(kind) {
-    controls.target.set(0, 0, 115);
+    controls.target.set(0, 0, 100);
     if (kind === 'front') camera.position.set(520, 0, 140);
     else if (kind === 'side') camera.position.set(0, -520, 140);
     else camera.position.set(360, -330, 260);

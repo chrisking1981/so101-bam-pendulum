@@ -8,19 +8,23 @@ infill, 4 walls, supports on the torso, hips and legs). Interactive 3D model wit
 - **Every joint sits in a clevis screwed to both horns** of its servo: the front metal horn and a second metal horn on the back,
   4 × M3 × 6 each, with 4 mm of plate under the heads (as on the measuring arms). The horn faces are 37.48 mm apart, measured in the
   official SO-101 assembly.
-- **The next servo stands upright in that clevis**, held at the end of its case opposite the shaft with four small screws: two in
-  the back holes, two in the front holes, the same holes the SO-101 parts use. Feet under the screw positions bridge to the case;
-  counterbores leave 2.5 mm of plastic under the heads, so the SO-101 kit screws fit.
-- Because each held servo stands with its far end away from the next joint, the next clevis never swings into the holder.
+- **The hip is a cross bracket** between the hip-roll horns and the hip-pitch horns. The hip-pitch servo hangs upside down in the
+  thigh, so the two hip axes are only 39 mm apart (first version: 56 mm with the pitch servo standing in the hip), closer to a
+  human ball joint, and no holder can swing into the next part.
+- **Servo cases are held at their far end** (opposite the shaft) with four small screws: two in the back holes, two in the front
+  holes, the same holes the SO-101 parts use. Feet under the screw positions bridge to the case; counterbores leave 2.5 mm of
+  plastic under the heads, so the SO-101 kit screws fit.
+- **The torso is a closed box** around the far ends of both hip-roll servos (stiff between the legs), with the Nano on the deck,
+  two cable holes in the bottom and four M3 holes on the deck for a head or extra weight.
 
 | Part | Count | What it holds |
 |---|---:|---|
-| Torso | 1 | both hip-roll servos (far ends), Nano 33 IoT on the deck (one 1.6 mm hole per header pin) |
-| Hip | 2 (mirrored) | clevis on the hip-roll horns, holds the hip-pitch servo |
-| Leg | 2 (mirrored) | clevis on the hip-pitch horns, 110 mm, holds the ankle servo |
+| Torso | 1 | closed box: both hip-roll servos (far ends), Nano 33 IoT on the deck (one 1.6 mm hole per header pin), M3 holes for a head |
+| Hip | 2 (mirrored) | cross bracket on the hip-roll horns and the hip-pitch horns |
+| Leg | 2 (mirrored) | holds the hip-pitch servo (upside down, top) and the ankle servo (bottom), 100 mm between the axes |
 | Foot | 2 (mirrored) | clevis on the ankle horns, sole 105 × 52 mm |
 
-Dimensions: hip axes 70 mm apart; roll axis 188 mm, hip-pitch axis 132 mm and ankle axis 22 mm above the floor; about 226 mm tall.
+Dimensions: hip axes 70 mm apart; roll axis 161 mm, hip-pitch axis 122 mm and ankle axis 22 mm above the floor; about 200 mm tall.
 Printed parts about 150 g (estimate at 40 % infill), six servos 354 g: about 0.51 kg with the Nano, close to the 0.5 kg of the simulation sketch.
 
 ## Checks (all in the script)
