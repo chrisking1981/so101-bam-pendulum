@@ -59,6 +59,10 @@ The complete chain (BAM sim + DR → PPO → ONNX → 50 Hz loop on the Mac with
 0.24° mean, 1.4° max ([details](../sim/pendulum_policy/README.md)). Also needed: a penalty on action changes strong enough that the policy
 holds still in simulation, and check in simulation for oscillation before running on hardware.
 
+Repeated on the **two-link pendulum** (two servos + Nano on the lower link): the policy trained only in simulation matched the real arm
+to 0.22° / 0.23° mean (hip / knee) on the first real run, with no oscillation; loop 20.00 ms with 1.8 ms work
+([details](../sim/double_pendulum/README.md)).
+
 ## Policy and training practice (from Microduck's playbook)
 
 - 50 Hz policy, no action low-pass filter unless the same filter runs on the robot.
@@ -69,7 +73,7 @@ holds still in simulation, and check in simulation for oscillation before runnin
 
 ## Still to measure
 
-- [x] Whole-loop timing on the Mac at 50 Hz, one servo: period 20.00 ms (max 20.3), 1 ms work, IMU data 0.9 ms old ([pipeline test](../sim/pendulum_policy/README.md)). Repeat with all servos on the bus.
+- [x] Whole-loop timing on the Mac at 50 Hz, one servo: period 20.00 ms (max 20.3), 1 ms work, IMU data 0.9 ms old ([pipeline test](../sim/pendulum_policy/README.md)). Two servos + Nano: 1.8 ms work per tick. Repeat with all servos on the bus.
 - [ ] Supply voltage at the servos with several servos loaded at once (sag).
 - [ ] Vibration on the robot body with all leg servos moving, and the filter's real-world output.
 - [ ] Gyro bias drift over 10+ minutes as the board warms up.

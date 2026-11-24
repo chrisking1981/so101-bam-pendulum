@@ -31,3 +31,25 @@ estimated 17 g). No fitting to these runs.
 - The large "real tracking error" values are the servos lagging behind fast goals (the knee cannot follow a 1 Hz ±50° square wave);
   the simulation has the same lag.
 - When only the hip moves, the real knee is pushed up to 0.35° (4 encoder steps) by the motion; the simulation shows less (0.01°).
+
+## Policy on both joints: trained in simulation, run on the real arm ([`dp_env.py`](dp_env.py), [`train.py`](train.py), [`run_real.py`](run_real.py), [`run_sim.py`](run_sim.py))
+
+PPO, 1.5 M steps on the MacBook CPU (6.6 min), with everything from the one-servo test in from the start (speed-register lag and
+quantisation, Nano tilt wander, smoothness penalty 3.0) plus randomized masses and a small cable spring/friction per joint.
+Observation: both encoders, both servo speeds, Nano tilt and gyro, both targets and errors, last action. Goals clamped to ±80°.
+Masses: upper link 22 g and as-built lower link 12.3 g from the Bambu Studio slice (35.6 g for both, split by volume); this changed
+the model check above by less than 0.01°.
+
+![policy](data/d1_real_vs_sim.png)
+
+| | Hip | Knee |
+|---|---:|---:|
+| Tracking error, real (sim) | 4.08° (3.99°) | 5.59° (5.47°) |
+| **Real vs sim**, mean / max | **0.22° / 1.96°** | **0.23° / 2.47°** |
+| Real inside the randomized sim band | 100% | 100% |
+| Oscillation while holding (action std), real | 0.01° | 0.01° |
+
+- **It worked the first time on the real arm**, with no changes after the simulation: same response as in simulation, no oscillation.
+  The lessons from the one-servo test (speed lag, smoothness) were already in the training.
+- Loop on the Mac with two servos and the Nano: 20.00 ms period (max 20.00), 1.8 ms work per tick (max 4.4), fresh IMU data every tick.
+- Nano tilt against hip + knee during the run: 0.69° mean (includes fast moves).

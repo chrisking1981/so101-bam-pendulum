@@ -2,9 +2,9 @@
 
 Geometry and masses from cad/double_pendulum.py and weighing (cad/double_pendulum_params.json):
 - hip (servo 1, ID 6) at the origin, axis y, q = 0 hanging straight down; knee (servo 2, ID 2) 100 mm further down the upper link.
-- upper body: printed upper link (~17 g estimated from the slicer-like 60 % of solid, centroid 68 mm) + servo 2 (59 g weighed, centre 87.5 mm).
-- lower body: 26 g weighed = as-built lower link (~9.4 g, centroid 43 mm) + Nano (5.5 g at 60 mm) + 4 M3 screws (~2.4 g at the hub)
-  + ~20 cm USB cable (~8.7 g, taken as spread 0..70 mm).
+- upper body: printed upper link (22 g from the Bambu Studio slice, centroid 68 mm) + servo 2 (59 g weighed, centre 87.5 mm).
+- lower body: 26 g weighed = as-built lower link (12.3 g from the slice, centroid 43 mm) + Nano (5.5 g at 60 mm) + 4 M3 screws (~2.4 g at the hub)
+  + the clamped USB cable (~5.8 g, the rest of the 26 g, taken as spread 0..70 mm).
 """
 import os
 import numpy as np
@@ -15,7 +15,9 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 PARAMS = os.path.join(REPO, "fits", "STS3215-12V", "m5.json")
 L1 = 0.100
 
-NOMINAL = dict(upper_link=0.0168, servo2=0.059, lower_link=0.0094, nano=0.0055, screws=0.0024, cable=0.0087)
+# Bambu Studio slice of both links: 35.6 g, split by volume -> upper link 22.0 g, as-built lower link 12.3 g;
+# lower assembly weighed 26 g -> cable piece 26 - 12.3 - 5.5 - 2.4 = 5.8 g
+NOMINAL = dict(upper_link=0.0220, servo2=0.059, lower_link=0.0123, nano=0.0055, screws=0.0024, cable=0.0058)
 
 XML = """
 <mujoco>
