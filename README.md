@@ -39,6 +39,11 @@ adapter, D = 32, the profile on and about 40 Hz logging, so they are not compara
 ## Prints
 Open BAM-kort-100.3mf (load holes at 50, 75 and 100 mm) or BAM-lang-150.3mf (150 mm) in your slicer, flat, at 100%. Mounting face: 4 mm, four M3 clearance holes on a 14 mm pitch circle. The mounting coupon fit one C044 horn. Check clearance and thread engagement on your own hardware. Print strength under dynamic load has not been established. Parametric source: bam_meetarmen.py (Python, build123d and trimesh).
 
+**Hole saws as weights:** a hole saw is round and symmetric, so when its arbor hole is centred on a load hole of the arm, its centre of mass is
+exactly on that hole. Print [hole_saw_bushing.3mf](hole_saw_bushing.3mf) (source: [hole_saw_bushing.py](hole_saw_bushing.py)): a Ø14.7 × 4.6 mm
+bushing with an M4 hole, which centres the saw's 15 mm hole on the arm's M4 bolt. It is slightly lower than the 5 mm saw base, so the bolt clamps the
+saw itself. Use one bushing per stacked saw and a large washer under the nut. Tape over the teeth before running fast trajectories.
+
 ## Measurements
 Use measurements/<variant>/<date>-<unique-run>/ for each run. Keep raw recordings unchanged. Store hardware setup, firmware settings, zero convention, actual supply voltage, weighed masses, payload centre radius and arm balance point with each recording. Label estimates explicitly. Record time, commanded and measured angle with units, and torque-enable state. Include voltage, speed, current or load when available. Keep data from a separate trajectory for validation. Commit and push each finished run to preserve it off-device.
 
