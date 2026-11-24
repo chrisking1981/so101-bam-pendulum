@@ -12,14 +12,23 @@ import numpy as np
 import gymnasium as gym
 import mujoco
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from model import build
+from model import build as build_sketch
+import model_v2
+
+
+def build(variant):
+    if variant.startswith("v2"):              # "v2" or "v2_50" (50 g on top of the torso)
+        top = float(variant.split("_")[1]) / 1000 if "_" in variant else 0.0
+        return model_v2.build(top)
+    return build_sketch(variant)
 from bam.model import load_model
 from bam.mujoco import MujocoController
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PARAMS = os.path.join(REPO, "fits", "STS3215-12V", "m5.json")
 QD_Q, SUB, PERIOD = 0.0767, 10, 0.6
-DEFAULT = {"roll": np.zeros(6), "knee": np.array([-0.35, 0.7, -0.35, -0.35, 0.7, -0.35])}
+DEFAULT = {"roll": np.zeros(6), "knee": np.array([-0.35, 0.7, -0.35, -0.35, 0.7, -0.35]),
+           "knee8": np.array([0, -0.3, 0.6, -0.3, 0, -0.3, 0.6, -0.3])}
 
 
 class Biped6Env(gym.Env):
@@ -30,11 +39,12 @@ class Biped6Env(gym.Env):
         self.model = load_model(PARAMS); self.model.actuator.kp = 32
         self.ctrl = MujocoController(self.model, self.joints, self.m, self.d)
         self.jq = np.array([self.m.joint(j).qposadr[0] for j in self.joints]); self.jv = np.array([self.m.joint(j).dofadr[0] for j in self.joints])
-        self.default = DEFAULT[variant]
+        self.nj = len(self.joints)
+        self.default = DEFAULT.get(variant, np.zeros(self.nj))
         self.floor = self.m.geom("floor").id; self.feet = [self.m.geom("foot_l").id, self.m.geom("foot_r").id]
         self.base_mass = self.m.body_mass.copy(); self.base_fric = self.m.geom_friction[self.floor].copy()
-        self.action_space = gym.spaces.Box(-1, 1, (6,), np.float32)
-        self.observation_space = gym.spaces.Box(-np.inf, np.inf, (28,), np.float32)
+        self.action_space = gym.spaces.Box(-1, 1, (self.nj,), np.float32)
+        self.observation_space = gym.spaces.Box(-np.inf, np.inf, (3 * self.nj + 10,), np.float32)
         self._renderer = None
 
     # helpers
@@ -56,7 +66,7 @@ class Biped6Env(gym.Env):
         if self.randomize:
             self.tilt_err = self.tilt_err * 0.99 + np.radians(1.0) * np.sqrt(0.02) * r.standard_normal(2)
             g = g + np.array([self.tilt_err[0], self.tilt_err[1], 0]) + r.uniform(-0.01, 0.01, 3); g /= np.linalg.norm(g)
-            q = q + r.uniform(-0.001, 0.001, 6); gyro = gyro + r.uniform(-0.03, 0.03, 3)
+            q = q + r.uniform(-0.001, 0.001, self.nj); gyro = gyro + r.uniform(-0.03, 0.03, 3)
         qdn = np.round(self.qd_prev / QD_Q) * QD_Q; self.qd_prev = qd
         ph = 2 * np.pi * self.t / PERIOD
         return np.concatenate([q - self.default, 0.1 * qdn, g, 0.2 * gyro, self.last_a, [np.sin(ph), np.cos(ph), self.v_cmd * 5, 1.0]]).astype(np.float32)
@@ -79,7 +89,7 @@ class Biped6Env(gym.Env):
         self.h0 = self.d.qpos[2]
         self.ctrl.reset()
         self.t, self.steps = 0.0, 0
-        self.last_a, self.qd_prev, self.tilt_err = np.zeros(6), np.zeros(6), np.zeros(2)
+        self.last_a, self.qd_prev, self.tilt_err = np.zeros(self.nj), np.zeros(self.nj), np.zeros(2)
         self.queue = [self.default.copy()] * (self.delay + 1)
         self.next_push = r.uniform(2, 5)
         return self._obs(), {}

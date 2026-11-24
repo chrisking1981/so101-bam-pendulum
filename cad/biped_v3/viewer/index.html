@@ -1,0 +1,190 @@
+<meta charset="utf-8">
+<title>Biped met knieën</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: workbench — the 3D stage fills the left, a parts-and-joints panel on the right (stacks below on phones). */
+:root {
+  --bg: #f3f4f2; --panel: #ffffff; --fg: #1d2126; --muted: #5d6670; --line: #d9ddd8; --accent: #c9822b; --stage: #e6e9e5;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15181b; --panel: #1d2125; --fg: #e8ebe7; --muted: #9aa3ab; --line: #30363b; --accent: #e3a24f; --stage: #101315; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #15181b; --panel: #1d2125; --fg: #e8ebe7; --muted: #9aa3ab; --line: #30363b; --accent: #e3a24f; --stage: #101315; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5; box-sizing: border-box;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px; }
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 16px; max-width: 1240px; margin: 0 auto; }
+@media (max-width: 860px) { .wrap { grid-template-columns: minmax(0, 1fr); } }
+.stage { position: relative; background: var(--stage); border: 1px solid var(--line); border-radius: 10px; height: min(78vh, 700px); min-height: 380px; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+h1 { font-size: 18px; font-weight: 500; margin: 0; text-wrap: balance; }
+.note { font-size: 13.5px; margin: 0; }
+.label { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.parts { display: grid; grid-template-columns: 1fr; gap: 5px; max-height: 210px; overflow: auto; }
+.parts label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13.5px; }
+.sw { width: 13px; height: 13px; border-radius: 3px; border: 1px solid var(--line); flex: none; }
+.slider { display: grid; grid-template-columns: 112px minmax(0, 1fr) 44px; align-items: center; gap: 8px; font-size: 13.5px; }
+.slider output { font-family: var(--mono); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=checkbox] { accent-color: var(--accent); }
+button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.status { font-size: 12.5px; color: var(--muted); margin: 0; }
+</style>
+
+<div class="wrap">
+  <div class="stage" id="stage"><canvas id="c" aria-label="Draaibaar 3D-model van de biped met acht servo's"></canvas>
+    <div class="hint">Slepen = draaien · scrollen of knijpen = zoomen · rechts slepen = schuiven</div></div>
+  <div class="panel">
+    <h1>Biped met knieën (8 servo's)</h1>
+    <p class="note">Vier servo's per been: heup-zijwaarts, heup, knie en enkel. Bovenbeen 80 mm (houdt de heup-servo en de knie-servo), onderbeen 60 mm (zit aan beide horns van de knie, houdt de enkel-servo). Romp, heupstuk en voet zoals versie 2.</p>
+    <div>
+      <p class="label">Gewrichten</p>
+      <div id="joints"></div>
+    </div>
+    <div class="btns">
+      <button id="vIso" type="button">Schuin</button>
+      <button id="vFront" type="button">Van voren</button>
+      <button id="vSide" type="button">Van opzij</button>
+      <button id="reset" type="button">Rechtop</button>
+      <button id="walk" type="button">Stap-pose</button>
+    </div>
+    <div>
+      <p class="label">Animaties</p>
+      <div class="btns">
+        <button type="button" data-anim="walk">Lopen (op de plaats)</button>
+        <button type="button" data-anim="sway">Zijwaarts wiegen</button>
+        <button type="button" data-anim="squat">Hurken</button>
+        <button type="button" data-anim="kick">Schoppen</button>
+        <button type="button" data-anim="stop">Stop</button>
+      </div>
+    </div>
+    <div>
+      <p class="label">Onderdelen</p>
+      <div class="parts" id="parts"></div>
+    </div>
+    <p class="status" id="status">Model laden…</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const canvas = document.getElementById('c'), stage = document.getElementById('stage'), status = document.getElementById('status');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(32, 1, 1, 5000); camera.up.set(0, 0, 1);
+  const controls = new THREE.OrbitControls(camera, canvas); controls.enableDamping = true;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x777777, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(250, -200, 400); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.3); fill.position.set(-200, 200, 100); scene.add(fill);
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(220, 64), new THREE.MeshStandardMaterial({ color: 0x8a918a, transparent: true, opacity: 0.18 }));
+  scene.add(ground);
+
+  const links = { torso: new THREE.Group() }; scene.add(links.torso);
+  const joints = {};
+  function pivot(parent, point, axis) {   // a group rotating about `axis` through `point`, children in world coordinates
+    const p = new THREE.Group(); p.position.set(point[0], point[1], point[2]); parent.add(p);
+    const inner = new THREE.Group(); inner.position.set(-point[0], -point[1], -point[2]); p.add(inner);
+    return { pivot: p, inner, axis };
+  }
+  function b64(s, T) { const bin = atob(s), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new T(u8.buffer); }
+
+  fetch('biped.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(D => {
+    for (const s of ['l', 'r']) {
+      const y = (s === 'l' ? 1 : -1) * D.HY, nl = s === 'l' ? 'links' : 'rechts';
+      const hip = pivot(links.torso, [0, y, D.Z_ROLL], 'x');
+      const thigh = pivot(hip.inner, [0, y, D.Z_PITCH], 'y');
+      const shank = pivot(thigh.inner, [0, y, D.Z_KNEE], 'y');
+      const foot = pivot(shank.inner, [0, y, D.Z_ANKLE], 'y');
+      links['hip_' + s] = hip.inner; links['thigh_' + s] = thigh.inner; links['shank_' + s] = shank.inner; links['foot_' + s] = foot.inner;
+      joints['roll_' + s] = { j: hip, label: 'Heup-zijwaarts ' + nl, min: -30, max: 30 };
+      joints['pitch_' + s] = { j: thigh, label: 'Heup ' + nl, min: -60, max: 60 };
+      joints['knee_' + s] = { j: shank, label: 'Knie ' + nl, min: 0, max: 90 };
+      joints['ankle_' + s] = { j: foot, label: 'Enkel ' + nl, min: -45, max: 45 };
+    }
+    const list = document.getElementById('parts');
+    D.parts.forEach((p, i) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(b64(p.pos, Float32Array), 3));
+      g.setIndex(new THREE.BufferAttribute(b64(p.idx, Uint32Array), 1)); g.computeVertexNormals();
+      const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.65, metalness: 0.05, flatShading: true, side: THREE.DoubleSide }));
+      links[p.link].add(m);
+      const lab = document.createElement('label'); const id = 'part' + i;
+      lab.innerHTML = '<input type="checkbox" checked id="' + id + '"><span class="sw"></span><span></span>';
+      lab.querySelector('.sw').style.background = p.color; lab.lastChild.textContent = p.name;
+      lab.querySelector('input').addEventListener('change', e => { m.visible = e.target.checked; });
+      list.appendChild(lab);
+    });
+    const jdiv = document.getElementById('joints');
+    Object.entries(joints).forEach(([k, J]) => {
+      const row = document.createElement('div'); row.className = 'slider';
+      row.innerHTML = '<span></span><input type="range" id="j_' + k + '" min="' + J.min + '" max="' + J.max + '" value="0"><output>0°</output>';
+      row.firstChild.textContent = J.label; jdiv.appendChild(row);
+      const inp = row.querySelector('input'), out = row.querySelector('output');
+      J.set = v => { inp.value = v; out.textContent = Math.round(v) + '°'; J.j.pivot.rotation[J.j.axis] = THREE.MathUtils.degToRad(v); };
+      inp.addEventListener('input', () => J.set(+inp.value));
+    });
+    status.textContent = 'Officiële STS3215-modellen (SO-ARM100) met de onderdelen uit cad/biped_v3.py.';
+    view('iso');
+  }).catch(() => { status.textContent = 'Het model kon niet geladen worden.'; });
+
+  function view(kind) {
+    controls.target.set(0, 0, 115);
+    if (kind === 'front') camera.position.set(520, 0, 140);
+    else if (kind === 'side') camera.position.set(0, -520, 140);
+    else camera.position.set(360, -330, 260);
+    controls.update();
+  }
+  document.getElementById('vIso').onclick = () => view('iso');
+  document.getElementById('vFront').onclick = () => view('front');
+  document.getElementById('vSide').onclick = () => view('side');
+  document.getElementById('reset').onclick = () => Object.values(joints).forEach(J => J.set(0));
+  document.getElementById('walk').onclick = () => {
+    const pose = { roll_l: 6, roll_r: 6, pitch_l: -30, pitch_r: 15, knee_l: 35, knee_r: 10, ankle_l: -5, ankle_r: -25 };
+    Object.entries(pose).forEach(([k, v]) => joints[k] && joints[k].set(v));
+  };
+  // ---- scripted animations (joint angles in degrees over time; feet kept level with ankle = -hip pitch)
+  const D2R = Math.PI / 180;
+  const anims = {
+    walk: t => {                                   // sway, swing the leg forward with a bent knee, 1.2 s per step cycle
+      const ph = 2 * Math.PI * t / 1.2, sway = 7 * Math.sin(ph), sw = 22 * Math.sin(ph + Math.PI / 2);
+      const kl = 15 + 30 * Math.max(0, Math.sin(ph + Math.PI)), kr = 15 + 30 * Math.max(0, Math.sin(ph));
+      const hl = -sw - kl / 2, hr = sw - kr / 2;
+      return { roll_l: sway, roll_r: sway, pitch_l: hl, pitch_r: hr, knee_l: kl, knee_r: kr, ankle_l: -(hl + kl), ankle_r: -(hr + kr) };
+    },
+    sway: t => { const s = 12 * Math.sin(2 * Math.PI * t / 1.6); return { roll_l: s, roll_r: s, pitch_l: 0, pitch_r: 0, ankle_l: 0, ankle_r: 0 }; },
+    squat: t => { const s = 35 * (0.5 - 0.5 * Math.cos(2 * Math.PI * t / 2.0));
+      return { roll_l: 0, roll_r: 0, pitch_l: -s, pitch_r: -s, knee_l: 2 * s, knee_r: 2 * s, ankle_l: -s, ankle_r: -s }; },
+    kick: t => {
+      const c = (t % 2.4) / 2.4, lean = 8 * Math.sin(Math.PI * Math.min(1, c / 0.9));
+      const k = c < 0.25 ? 0 : c < 0.45 ? 35 * (c - 0.25) / 0.2 : c < 0.55 ? 35 - 85 * (c - 0.45) / 0.1 : c < 0.9 ? -50 + 50 * (c - 0.55) / 0.35 : 0;
+      const kn = c < 0.25 ? 0 : c < 0.45 ? 70 * (c - 0.25) / 0.2 : c < 0.55 ? 70 - 70 * (c - 0.45) / 0.1 : 0;
+      return { roll_l: -lean, roll_r: -lean, pitch_l: -k, pitch_r: 0, knee_l: kn, knee_r: 0, ankle_l: k * 0.3, ankle_r: 0 };
+    },
+  };
+  let anim = null, t0 = 0;
+  document.querySelectorAll('[data-anim]').forEach(btn => btn.addEventListener('click', () => {
+    const a = btn.dataset.anim;
+    if (a === 'stop') { anim = null; Object.values(joints).forEach(J => J.set(0)); return; }
+    anim = anims[a]; t0 = performance.now();
+  }));
+  function animate() {
+    if (!anim) return;
+    const reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const t = (performance.now() - t0) / 1000 * (reduce ? 0.4 : 1);
+    const q = anim(t);
+    Object.entries(q).forEach(([k, v]) => { const J = joints[k]; if (J) J.set(Math.max(J.min, Math.min(J.max, v))); });
+  }
+
+  function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  new ResizeObserver(resize).observe(stage); resize();
+  (function loop() { animate(); controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+})();
+</script>

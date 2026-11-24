@@ -15,7 +15,7 @@ _spec = importlib.util.spec_from_file_location("pend_train", os.path.join(os.pat
 OnnxPolicy = None  # loaded in main (the pendulum trainer parses its own CLI at import, so only its class is taken)
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--variant", choices=["roll", "knee"], required=True)
+ap.add_argument("--variant", required=True, help="roll, knee (sketches) or v2, v2_50, v2_100 (CAD model, grams on top)")
 ap.add_argument("--steps", type=int, default=5_000_000); ap.add_argument("--envs", type=int, default=4); ap.add_argument("--out", required=True)
 a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
 
@@ -45,5 +45,5 @@ if __name__ == "__main__":
     cls = [n for n in tree.body if isinstance(n, ast.ClassDef) and n.name == "OnnxPolicy"][0]
     mod = types.ModuleType("onnxpol"); exec("import numpy as np\nimport torch\n" + ast.unparse(cls), mod.__dict__)
     net = mod.OnnxPolicy(model.policy, env.obs_rms.mean, env.obs_rms.var, env.clip_obs).eval()
-    torch.onnx.export(net, torch.zeros(1, 28), os.path.join(a.out, "policy.onnx"), input_names=["obs"], output_names=["action"], dynamo=False)
+    torch.onnx.export(net, torch.zeros(1, env.observation_space.shape[0]), os.path.join(a.out, "policy.onnx"), input_names=["obs"], output_names=["action"], dynamo=False)
     print("done", a.variant, flush=True)

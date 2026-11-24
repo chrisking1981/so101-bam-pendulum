@@ -55,8 +55,37 @@ def leg_knee(s, side):
     </body>"""
 
 
+def leg_knee8(s, side):
+    """Hip roll -> hip pitch -> thigh 80 mm -> knee -> shank 80 mm -> ankle pitch -> foot (4 servos per leg)."""
+    y = 0.035 * s
+    return f"""
+    <body name="hiproll_{side}" pos="0 {y} -0.03">
+      <joint name="hip_roll_{side}" axis="1 0 0" range="-0.5 0.5"/>
+      {servo_geom(f"s_hp_{side}", "0 0 -0.03", "90 0 0")}
+      <geom type="box" size="0.02 0.015 0.01" pos="0 0 -0.012" mass="0.010" {DEF} rgba=".82 .63 .35 1"/>
+      <body name="thigh_{side}" pos="0 0 -0.03">
+        <joint name="hip_pitch_{side}" axis="0 1 0" range="-1.4 1.4"/>
+        <geom type="capsule" size="0.009" fromto="0 0 -0.005 0 0 -0.075" mass="0.012" {DEF} rgba=".82 .63 .35 1"/>
+        {servo_geom(f"s_kn_{side}", "0 0 -0.08", "90 0 0")}
+        <body name="shank_{side}" pos="0 0 -0.08">
+          <joint name="knee_{side}" axis="0 1 0" range="-0.2 2.2"/>
+          <geom type="capsule" size="0.009" fromto="0 0 -0.005 0 0 -0.075" mass="0.012" {DEF} rgba=".82 .63 .35 1"/>
+          {servo_geom(f"s_an_{side}", "0 0 -0.08", "90 0 0")}
+          <body name="foot_{side}" pos="0 0 -0.08">
+            <joint name="ankle_{side}" axis="0 1 0" range="-1.2 1.2"/>
+            <geom name="foot_{side}" type="box" size="0.05 0.028 0.004" pos="0.008 0 -0.024" mass="0.015" {DEF} rgba=".9 .5 .3 1"/>
+          </body>
+        </body>
+      </body>
+    </body>"""
+
+
 def build_xml(variant, dt=0.002):
-    if variant == "roll":
+    if variant == "knee8":
+        hips = servo_geom("s_hr_l", "0 0.035 -0.01", "0 0 90") + servo_geom("s_hr_r", "0 -0.035 -0.01", "0 0 90")
+        legs = leg_knee8(1, "l") + leg_knee8(-1, "r"); z0 = 0.03 + 0.03 + 0.08 + 0.08 + 0.028 + 0.002
+        joints = ["hip_roll_l", "hip_pitch_l", "knee_l", "ankle_l", "hip_roll_r", "hip_pitch_r", "knee_r", "ankle_r"]
+    elif variant == "roll":
         hips = servo_geom("s_hr_l", "0 0.035 -0.01", "0 0 90") + servo_geom("s_hr_r", "0 -0.035 -0.01", "0 0 90")
         legs = leg_roll(1, "l") + leg_roll(-1, "r"); z0 = 0.03 + 0.03 + 0.13 + 0.028 + 0.002
         joints = ["hip_roll_l", "hip_pitch_l", "ankle_l", "hip_roll_r", "hip_pitch_r", "ankle_r"]
@@ -90,6 +119,6 @@ def build(variant, dt=0.002):
 
 
 if __name__ == "__main__":
-    for v in ("roll", "knee"):
+    for v in ("roll", "knee", "knee8"):
         m, j = build(v); d = mujoco.MjData(m); mujoco.mj_forward(m, d)
         print(v, "mass %.0f g" % (m.body_mass.sum() * 1000), "torso height %.3f" % d.qpos[2], "joints", j)
