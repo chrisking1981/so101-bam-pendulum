@@ -1,7 +1,7 @@
-# 12 V follower ID 6 with two hole saws (387 g), compared with no load and one hole saw
+# 12 V follower ID 6 with two hole saws (387 g saws, 401 g total), compared with no load and one hole saw
 
 Both hole saws (387 g together) are nested on the 100 mm hole of the short arm, each with its own centring bushing. BAM log values: `mass = 0.392`, `arm_mass = 0.009`,
-`length = 0.100`. **The mass is an estimate** (saws + bushings + bolt and washers). It will be patched once the complete pendulum is weighed.
+`length = 0.100`. Complete pendulum weighed at **401 g** (saws, bushings, bolt, washers and arm), so `mass` = 401 − 9 g arm.
 12 V adapter, profile off, full torque limits, P = 4/8/16/32, D = 0. 16 runs, no bus timeouts, 31 °C afterwards.
 
 **Zero measured before recording** with `find_vertical` (±90° sweep): the mounted position was **0.82°** from the gravity vertical (fit residual 1.4/1000, gravity
