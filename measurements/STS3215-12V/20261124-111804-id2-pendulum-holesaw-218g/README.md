@@ -48,3 +48,23 @@ ID2 lift_and_drop kp32 after release: start -89.5°, end -89.4°, max -89.4°
   on the C044 units, but much larger here.
 - **For RL:** with torque on, one 12 V model fits both units. Torque-off behaviour (falling limbs, compliant modes) depends on static friction that differs per unit
   and cannot be predicted precisely. Randomize it widely, or avoid switching torque off.
+
+## Update: zero measured with a gravity sweep
+
+The operator saw that the arm hung at a slant. `find_vertical.py` ([scripts/bam_feetech](../../../scripts/bam_feetech/find_vertical.py)) measures the gravity
+zero directly:
+
+- The servo sweeps slowly from −90° to +90° and back at P = 32, 6 °/s.
+- Averaging the up and down sweeps removes the friction term. The remaining load follows −k·sin(θ − θ0); fit residual 1/1000 PWM over 86 angle bins.
+
+| | Value |
+|---|---|
+| Gravity zero relative to the stored zero (raw 2469) | **−8.26°** (−94 raw steps), so the true vertical is raw ≈ 2375 |
+| Gravity load amplitude | 29/1000 PWM |
+| Friction half-band | 43/1000 PWM |
+
+A first sweep at ±60° gave −9.9°. [zero-corrected/](zero-corrected/) holds the same 16 runs with `position` and `goal_position` shifted so that 0 is the
+gravity vertical; use these for fitting. The raw files above are unchanged.
+
+The ID 3 runs could not be corrected this way, because that pendulum had already been moved. Its zero error is unknown and is left to BAM's `q_offset`.
+**From now on: after mounting a pendulum on a non-back-drivable servo, run `find_vertical --update-zero` before recording.**

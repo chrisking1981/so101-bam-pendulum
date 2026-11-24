@@ -84,6 +84,8 @@ Keep the type-specific model as the centre, and do not widen ranges to cover oth
 - Log at a high rate. rustypot with one 8-byte read per loop reaches about 1200 Hz on this USB adapter; BAM resamples to 5 ms.
 - The load must be rigid. Bolt it with two bolts; do not hang it on a string. Weigh the complete pendulum, and find its centre of mass by
   balancing it over an edge, measured from the axis.
+- **Zero on servos that cannot be back-driven** (1:345 C001 and 12 V): the arm does not hang to the bottom with the torque off, so the "hanging" position is wherever
+  it was mounted. Measure the gravity zero with a slow ±90° sweep (`scripts/bam_feetech/find_vertical.py`); on the 12 V ID 2 it was off by 8.3°.
 - Use several loads per type. The C046 fit used no load, 281 g / 92 mm and 450 g / 100 mm.
 - Hold out one P value (kp 8) for validation.
 - **Pipeline check:** refitting Rhoban's raw data reproduces Rhoban's published parameters (kt 1.168 vs 1.178, armature 0.0259 vs 0.0261), and
