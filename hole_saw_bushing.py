@@ -5,7 +5,7 @@ A hole saw's 15 mm arbor hole is centred on an M4 load hole of the arm, so the s
 - Height 4.6 mm: just below the 5 mm thick saw base, so the M4 bolt clamps the saw itself (not the bushing) against the arm.
   For two nested saws use one bushing per saw.
 - M4 clearance hole 4.4 mm.
-Writes hole_saw_bushing.3mf with two bushings on the plate (one per saw).
+Writes hole_saw_bushing.3mf with two bushings on the plate (one per saw), each set to 100% infill and 3 walls for Bambu Studio.
 
     uv run python hole_saw_bushing.py
 """
@@ -34,5 +34,27 @@ for i, p in enumerate(parts):
     scene.add_geometry(p, node_name=f"bushing_{i + 1}", geom_name=f"bushing_{i + 1}")
 path = OUT / "hole_saw_bushing.3mf"
 scene.export(path)
+
+# Per-object print settings for Bambu Studio: 100% infill for both bushings (small, loaded parts).
+import zipfile, shutil, tempfile
+cfg = ['<?xml version="1.0" encoding="UTF-8"?>', '<config>']
+for i in range(1, len(parts) + 1):
+    cfg += [f'  <object id="{i}">',
+            f'    <metadata key="name" value="bushing_{i}"/>',
+            '    <metadata key="extruder" value="1"/>',
+            '    <metadata key="sparse_infill_density" value="100%"/>',
+            '    <metadata key="sparse_infill_pattern" value="zig-zag"/>',   # Bambu's name for rectilinear (grid cannot do 100%)
+            '    <metadata key="wall_loops" value="3"/>',
+            f'    <part id="{i}" subtype="normal_part">',
+            f'      <metadata key="name" value="bushing_{i}"/>',
+            '    </part>',
+            '  </object>']
+cfg.append('</config>')
+tmp = Path(tempfile.mkstemp(suffix=".3mf")[1])
+with zipfile.ZipFile(path) as zin, zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as zout:
+    for item in zin.infolist():
+        zout.writestr(item, zin.read(item.filename))
+    zout.writestr("Metadata/model_settings.config", "\n".join(cfg) + "\n")
+shutil.move(tmp, path)
 b = parts[0]
 print(f"{path}: 2 bushings, OD {OD} mm, height {H} mm, M4 hole {HOLE} mm, volume {b.volume:.0f} mm3 each, extents {b.extents.round(2)}")
