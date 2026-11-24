@@ -36,6 +36,7 @@ through BAM's friction budget (`friction_scale`), not MuJoCo's `dof_frictionloss
 | Armature | ±10% | fit spread m1–m6: 0.018–0.033 | ±10% |
 | Floor friction | 0.5–1.2 (current biped env) | — | 0.7–1.3 |
 | Pushes | every 3–6 s, ±0.3 m/s | — | same |
+| **Tether cables** (Nano USB, servo bus) | the clamped piece of cable counted in the weighed link mass; per joint a small random spring (0–0.01 N·m/rad) and extra friction (0–0.01 N·m) for cable drag. Route the cables along the links, clamp them next to each joint with a loop | with the USB cable on the Nano and not modelled, the one-servo pipeline test still matched to 0.24° ([pipeline test](../sim/pendulum_policy/README.md)); check again with two joints | — (Microduck is not tethered) |
 
 ## IMU (Nano 33 IoT, LSM6DS3)
 
