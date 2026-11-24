@@ -14,6 +14,7 @@ both parts flat). The fit is checked in the script against official models:
 | Body screws (as on the SO-101) | official SO101 Assembly.step: small screws parallel to the servo axis into the two holes at the case end opposite the shaft | 2 holes from under the plate line up with the servo's back holes at (−20.3, ±10.25); a 1.8 mm foot bridges to the case, counterbored so 2.5 mm of plastic is under the head (same as the SO-101 parts, so the kit's small screws fit) |
 | Servo 2's connectors | same | stick through the window in the plate; the cable leaves underneath |
 | Servo 2's axis | same | exactly 100.0 mm from servo 1's axis |
+| Hub thickness | the measuring arms (`bam_meetarmen.py`) | 4 mm under the M3 × 6 horn screws on both links, rising to 6 mm from 12 to 28 mm |
 | Lower-link hub against servo 2's horn | same | the 4 horn holes (±4.95 mm) line up with the M3 holes; the centre hole clears the horn screw |
 | Nano header pin holes | Arduino datasheet ABX00027, section 6 | one 1.4 mm hole per pin (2 × 15), rows 15.24 mm apart, 2.54 mm pitch, first pin 3.81 mm from the board end. If they print too tight, open them with a 1.2 mm drill |
 

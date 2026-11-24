@@ -8,7 +8,7 @@ Dimensions come from official models, not guesses:
 - Arduino Nano 33 IoT: official datasheet ABX00027 section 6: board 43.16 x 17.77 mm, header rows 15.24 mm apart (100 mil grid), 15 pins
   per row at 2.54 mm, first and last pin 3.81 mm from the short edges; 4 x 1.65 mm holes 1.26 mm from the edges.
 
-Upper link: hub for servo 1's horn (4 x M3, like BAM-kort-100), 100 mm to servo 2's axis, then a pocket that holds servo 2's case with
+Upper link: hub for servo 1's horn (4 x M3 x 6, 4 mm thick under the heads like BAM-kort-100), 100 mm to servo 2's axis, then a pocket that holds servo 2's case with
 0.25 mm clearance, a through window for its connectors (the cable leaves underneath) and two cable-tie slots.
 Lower link: hub for servo 2's horn, Nano seat at 60 mm with one 1.4 mm hole per header pin (30), so the board cannot shift or rattle\n(USB toward the joint), two cable-tie slots.
 
@@ -52,6 +52,15 @@ def hub_holes(x0=0.0):
     return [(x0, 0, CENTER)] + [(x0 + sx * o, sy * o, M3) for sx in (-1, 1) for sy in (-1, 1)]
 
 
+HUB_T = 4.0                               # plate thickness under the M3 heads at the horn, as on BAM-kort-100 (M3 x 6 horn screws)
+
+
+def thin_hub(solid):
+    """Same profile as bam_meetarmen.py: a flat 4 mm face under the screw heads out to x = 12, rising to full thickness at x = 28."""
+    prof = b.Plane.XZ * b.Polygon((-15, HUB_T), (12, HUB_T), (28, T), (28, T + 30), (-15, T + 30), align=None)
+    return solid - b.extrude(prof, amount=30, both=True)
+
+
 def drill(solid, holes, z0=-1, h=50):
     for x, y, d in holes:
         solid -= b.Pos(x, y, z0) * b.Cylinder(d / 2, h, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
@@ -87,6 +96,7 @@ def upper_link():
         part -= b.Pos(sx(xs), ys, -1) * b.Cylinder(SCREW_D / 2, T + foot_h + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
         top = T + foot_h
         part -= b.Pos(sx(xs), ys, -1) * b.Cylinder(HEAD_D / 2, top - UNDER_HEAD + 1, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+    part = thin_hub(part)
     part = drill(part, hub_holes(0.0))
     return part
 
@@ -98,6 +108,7 @@ def lower_link():
     part += b.Box(L2, 16, T, align=(b.Align.MIN, b.Align.CENTER, b.Align.MIN))
     part += b.Pos(NANO_R, 0, 0) * b.Box(pad_l, nano_w + 10, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     part += b.Pos(L2, 0, 0) * b.Cylinder(8, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+    part = thin_hub(part)
     part = drill(part, hub_holes(0.0))
     # one hole per header pin: two rows 15.24 apart, 15 pins at 2.54 (first/last 3.81 mm from the board ends).
     # 1.4 mm holes for 0.64 mm square pins (0.9 mm diagonal): FDM holes print ~0.2-0.3 mm small, so they end up ~1.1-1.2 mm.
@@ -145,6 +156,13 @@ print("servo back holes:", back_holes, " link screw holes:", want)
 assert all(min(abs(bx - wx) + abs(by - wy) for bx, by in back_holes) < 0.05 for wx, wy in want), "body screws miss the servo holes"
 hub = sorted((round(x, 2), round(y, 2)) for x, y, d in hub_holes(0.0) if d == M3)
 assert all(min(abs(hx - x) + abs(hy - y) for x, y in hub) < 0.05 for hx, hy in horn_holes), "hub pattern does not match the horn"
+
+# hub thickness under the horn screws: 4 mm on both links (M3 x 6 screws need it, as on the measuring arms)
+for name, part in (("upper", up), ("lower", lo)):
+    m_ = mesh_of(part) if 'mesh_of' in globals() else None
+    hub_top = max(v.Z for v in part.vertices() if (v.X ** 2 + v.Y ** 2) ** 0.5 < 11.5)
+    print(f"{name} link: hub thickness at the horn screws {hub_top:.2f} mm")
+    assert abs(hub_top - HUB_T) < 0.01, "hub must be 4 mm under the M3 heads"
 
 # --- outputs
 mu, ml = mesh_of(up), mesh_of(lo)
