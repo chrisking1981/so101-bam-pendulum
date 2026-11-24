@@ -196,7 +196,11 @@ def inertia_about_axis(m, axis_xy, mass):
 lo_built = lower_link(as_built=True); mlb = mesh_of(lo_built)
 mlb.export(HERE / "lower_link_as_built.stl")
 print(f"lower link as built: volume {mlb.volume:.0f} mm3, mass at 100% infill {mlb.volume * PLA:.1f} g (written to cad/lower_link_as_built.stl)")
-params = dict(L1_m=L1 / 1000, L2_m=L2 / 1000, nano_r_m=NANO_R / 1000, servo_mass_g=55.0, nano_mass_g=5.5,
+params = dict(L1_m=L1 / 1000, L2_m=L2 / 1000, nano_r_m=NANO_R / 1000, nano_mass_g=5.5,
+              servo_mass_g=59.0,          # weighed 2026-11-24: STS3215 12 V with its metal horn and horn screw
+              lower_assembly_mass_g=26.0, # weighed: (servo 2 + lower link + Nano + 4 M3 screws + ~20 cm USB cable) 85 g - servo 59 g
+              lower_assembly_note="26 g = as-built lower link + Nano 33 IoT + 4 M3x6 + about 20 cm of USB cable; the free cable end "
+                                  "beyond the clamp is partly carried by the arm, so randomize this mass about +-15% in simulation",
               upper_link_volume_mm3=float(mu.volume), lower_link_volume_mm3=float(ml.volume), lower_link_as_built_volume_mm3=float(mlb.volume),
               servo2_axis_height_above_link1_bottom_mm=T - BACK_Z + HORN_TOP,
               as_built={"lower_link": "commit 32bb5cd: 6 mm hub; 4 horn-screw holes counterbored by hand (~5 mm, 2 mm deep) so M3x6 "
