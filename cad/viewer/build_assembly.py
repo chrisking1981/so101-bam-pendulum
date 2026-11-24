@@ -6,7 +6,7 @@ import json, base64, numpy as np, build123d as b, trimesh
 src = open('cad/double_pendulum.py').read().split('up, lo = upper_link(), lower_link()')[0]
 g = {'__file__': 'cad/double_pendulum.py'}; exec(src, g)
 L1, T, BACK_Z, HORN_TOP, NANO_R = g['L1'], g['T'], g['BACK_Z'], g['HORN_TOP'], g['NANO_R']
-up, lo = g['upper_link'](), g['lower_link']()
+up, lo = g['upper_link'](), g['lower_link'](as_built=True)   # the lower link as it is on the bench
 servo = b.import_step('cad/vendor/STS3215_03a.step')
 
 

@@ -30,7 +30,10 @@ The simulation must use the parts as built:
 
 | Part | Version | Notes |
 |---|---|---|
-| Lower link (Nano) | commit `32bb5cd`: **6 mm hub** (before the 4 mm hub fix), 1.4 mm pin holes | pin holes widened by hand until the pins fit. The four horn-screw holes were counterbored by hand to about half the thickness, so the M3 × 6 heads sit recessed and the screws grip servo 2's horn |
+| Lower link (Nano) | commit `32bb5cd`: **6 mm hub** (before the 4 mm hub fix), 1.4 mm pin holes | pin holes widened by hand until the pins fit. The four horn-screw holes were counterbored by hand (about Ø5 mm, 2 mm deep), so the M3 × 6 heads sit recessed and the screws grip servo 2's horn |
 | Upper link (servo pocket) | current version: 4 mm hub, body screws from below | |
+
+The as-built lower link is modelled too: `lower_link(as_built=True)` in the script, exported as `lower_link_as_built.stl`, and used by the
+3D viewer and the simulation. The print file keeps the improved version.
 
 Masses: weigh both links and the lower link with the Nano mounted, and enter them in `double_pendulum_params.json`.

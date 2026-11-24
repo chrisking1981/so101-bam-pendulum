@@ -101,21 +101,29 @@ def upper_link():
     return part
 
 
-def lower_link():
+def lower_link(as_built=False):
+    """as_built=True: the lower link actually on the bench (printed from commit 32bb5cd): 6 mm hub with the four horn-screw holes
+    counterbored by hand (about 5 mm wide, 2 mm deep, so M3 x 6 screws grip the horn) and 1.4 mm pin holes."""
     nano_l, nano_w = 43.16, 17.77
     pad_l = nano_l + 8
     part = b.Cylinder(12, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     part += b.Box(L2, 16, T, align=(b.Align.MIN, b.Align.CENTER, b.Align.MIN))
     part += b.Pos(NANO_R, 0, 0) * b.Box(pad_l, nano_w + 10, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     part += b.Pos(L2, 0, 0) * b.Cylinder(8, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
-    part = thin_hub(part)
-    part = drill(part, hub_holes(0.0))
+    if as_built:
+        part = drill(part, hub_holes(0.0))
+        for x, y, d in hub_holes(0.0):
+            if d == M3:
+                part -= b.Pos(x, y, T - 2.0) * b.Cylinder(2.5, 3.0, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+    else:
+        part = thin_hub(part)
+        part = drill(part, hub_holes(0.0))
     # one hole per header pin: two rows 15.24 apart, 15 pins at 2.54 (first/last 3.81 mm from the board ends).
     # 0.64 mm square pins (0.9 mm diagonal); FDM holes print small. 1.4 mm was too tight in practice, so 1.6 mm.
     for y in (-15.24 / 2, 15.24 / 2):
         for k in range(15):
             x = NANO_R - 43.16 / 2 + 3.81 + 2.54 * k
-            part -= b.Pos(x, y, -1) * b.Cylinder(PIN_HOLE / 2, T + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+            part -= b.Pos(x, y, -1) * b.Cylinder((1.4 if as_built else PIN_HOLE) / 2, T + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     # cable-tie slots either side of the board, between the rows ends
     for x in (NANO_R - nano_l / 2 + 2, NANO_R + nano_l / 2 - 2):
         for y in (-(nano_w / 2 + 3), nano_w / 2 + 3):
@@ -185,9 +193,15 @@ def inertia_about_axis(m, axis_xy, mass):
     return float(mm.moment_inertia[2, 2]) * 1e-9, (mm.center_mass[:2] * 1e-3).tolist()
 
 
+lo_built = lower_link(as_built=True); mlb = mesh_of(lo_built)
+mlb.export(HERE / "lower_link_as_built.stl")
+print(f"lower link as built: volume {mlb.volume:.0f} mm3, mass at 100% infill {mlb.volume * PLA:.1f} g (written to cad/lower_link_as_built.stl)")
 params = dict(L1_m=L1 / 1000, L2_m=L2 / 1000, nano_r_m=NANO_R / 1000, servo_mass_g=55.0, nano_mass_g=5.5,
-              upper_link_volume_mm3=float(mu.volume), lower_link_volume_mm3=float(ml.volume),
+              upper_link_volume_mm3=float(mu.volume), lower_link_volume_mm3=float(ml.volume), lower_link_as_built_volume_mm3=float(mlb.volume),
               servo2_axis_height_above_link1_bottom_mm=T - BACK_Z + HORN_TOP,
+              as_built={"lower_link": "commit 32bb5cd: 6 mm hub; 4 horn-screw holes counterbored by hand (~5 mm, 2 mm deep) so M3x6 "
+                                      "screws grip; 1.4 mm pin holes widened by hand. Modelled by lower_link(as_built=True) -> cad/lower_link_as_built.stl",
+                        "upper_link": "current version (4 mm hub, body screws)", "masses_g": "to be weighed"},
               note="link masses depend on infill: weigh the printed parts and put the real values here")
 json.dump(params, open(HERE / "double_pendulum_params.json", "w"), indent=1)
 # the 30 pin holes sit exactly on the datasheet grid

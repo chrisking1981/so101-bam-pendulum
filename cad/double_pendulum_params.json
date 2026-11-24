@@ -6,11 +6,12 @@
  "nano_mass_g": 5.5,
  "upper_link_volume_mm3": 22514.281476144588,
  "lower_link_volume_mm3": 11554.915983995672,
+ "lower_link_as_built_volume_mm3": 12607.573159708309,
  "servo2_axis_height_above_link1_bottom_mm": 42.4,
- "note": "link masses depend on infill: weigh the printed parts and put the real values here",
  "as_built": {
-  "lower_link": "commit 32bb5cd: 6 mm hub; the 4 horn-screw holes counterbored by hand to ~3 mm so M3x6 screws grip the horn; 1.4 mm pin holes widened by hand",
+  "lower_link": "commit 32bb5cd: 6 mm hub; 4 horn-screw holes counterbored by hand (~5 mm, 2 mm deep) so M3x6 screws grip; 1.4 mm pin holes widened by hand. Modelled by lower_link(as_built=True) -> cad/lower_link_as_built.stl",
   "upper_link": "current version (4 mm hub, body screws)",
   "masses_g": "to be weighed"
- }
+ },
+ "note": "link masses depend on infill: weigh the printed parts and put the real values here"
 }
