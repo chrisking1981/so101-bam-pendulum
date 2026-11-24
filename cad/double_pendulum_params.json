@@ -4,7 +4,7 @@
  "nano_r_m": 0.06,
  "servo_mass_g": 55.0,
  "nano_mass_g": 5.5,
- "upper_link_volume_mm3": 23783.11578572379,
+ "upper_link_volume_mm3": 23663.486738052496,
  "lower_link_volume_mm3": 12691.984176321559,
  "servo2_axis_height_above_link1_bottom_mm": 42.4,
  "note": "link masses depend on infill: weigh the printed parts and put the real values here"

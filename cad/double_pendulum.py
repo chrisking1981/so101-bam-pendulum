@@ -34,6 +34,12 @@ CASE_Z0, BACK_Z = -14.4, -17.7          # case side walls start at CASE_Z0; the 
 CONN_X, CONN_Y = (-2.6, 15.5), (-8.6, 8.6)
 HORN_TOP = 18.7
 CLR = 0.25
+# Body screws, as on the SO-101 (found in the official SO101 Assembly.step: the small screws run parallel to the servo axis into the two
+# holes at the end of the case opposite the shaft, 20.5 mm apart). On the back of the case these holes are at (x, y) = (-20.3, +-10.25)
+# and the back surface there is at z = -15.9. Screws come from under the plate; 2.5 mm of plastic under the head, like the SO-101 parts.
+BODY_SCREWS = [(-20.3, -10.25), (-20.3, 10.25)]
+BACK_AT_SCREWS = -15.9
+SCREW_D, HEAD_D, UNDER_HEAD = 2.2, 4.6, 2.5
 # --- links
 L1, L2, T = 100.0, 80.0, 6.0             # joint-to-joint, joint-to-tip, plate thickness
 NANO_R = 60.0                             # Nano centre on the lower link
@@ -74,6 +80,13 @@ def upper_link():
         for y in (-py - 2.5, py + 2.5):
             part += b.Pos(x, y, 0) * b.Box(8, 5, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
             part -= b.Pos(x, y, -1) * b.Box(4, 2.2, T + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+    # body screws: a foot under each hole bridges the gap between plate and case back, counterbored from below
+    for xs, ys in BODY_SCREWS:
+        foot_h = (BACK_AT_SCREWS - BACK_Z)            # 1.8 mm
+        part += b.Pos(sx(xs), ys, T) * b.Cylinder(2.6, foot_h, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+        part -= b.Pos(sx(xs), ys, -1) * b.Cylinder(SCREW_D / 2, T + foot_h + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+        top = T + foot_h
+        part -= b.Pos(sx(xs), ys, -1) * b.Cylinder(HEAD_D / 2, top - UNDER_HEAD + 1, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     part = drill(part, hub_holes(0.0))
     return part
 
@@ -124,6 +137,12 @@ assert abs(ax.X - L1) < 0.01 and abs(ax.Y) < 0.01
 horn_holes = sorted({(round(f.axis_of_rotation.position.X - L1, 2), round(f.axis_of_rotation.position.Y, 2)) for f in servo_in_pocket.faces()
                      if f.geom_type == b.GeomType.CYLINDER and abs(f.radius - 1.25) < 0.01 and f.bounding_box().min.Z > 20})
 print("servo 2 horn holes relative to its axis:", horn_holes)
+# the body-screw holes of the link line up with the servo's own holes (r = 0.75 on its back)
+back_holes = sorted({(round(f.axis_of_rotation.position.X, 2), round(f.axis_of_rotation.position.Y, 2)) for f in servo_in_pocket.faces()
+                     if f.geom_type == b.GeomType.CYLINDER and abs(f.radius - 0.75) < 0.01 and f.bounding_box().max.Z < T + 5})
+want = [(round(L1 + xs - SHAFT[0], 2), ys) for xs, ys in BODY_SCREWS]
+print("servo back holes:", back_holes, " link screw holes:", want)
+assert all(min(abs(bx - wx) + abs(by - wy) for bx, by in back_holes) < 0.05 for wx, wy in want), "body screws miss the servo holes"
 hub = sorted((round(x, 2), round(y, 2)) for x, y, d in hub_holes(0.0) if d == M3)
 assert all(min(abs(hx - x) + abs(hy - y) for x, y in hub) < 0.05 for hx, hy in horn_holes), "hub pattern does not match the horn"
 
