@@ -17,7 +17,7 @@ p = argparse.ArgumentParser()
 p.add_argument("--params", required=True)
 p.add_argument("--logdir", nargs="+", required=True)
 p.add_argument("--dt", type=float, default=0.001)
-p.add_argument("--vin", type=float, default=7.4)
+p.add_argument("--vin", type=float, default=None, help="supply voltage; default: the log's vin, else 7.4")
 p.add_argument("--plot")
 p.add_argument("--md")
 a = p.parse_args()
@@ -43,6 +43,9 @@ def build(log, variant, pd_params=None):
         mass_geom = f'<geom type="sphere" size="0.005" pos="0 0 {-L}" mass="{m}" contype="0" conaffinity="0"/>'
     else:
         mass_geom = '<geom type="sphere" size="0.005" mass="1e-6" contype="0" conaffinity="0"/>'
+    if log.get("arm_mass", 0) > 0 and L > 0:
+        # thin uniform arm from the pivot to the mass (inertia arm_mass * L^2 / 3, as in bam.testbench.Pendulum)
+        mass_geom += f'<geom type="capsule" size="0.001" fromto="0 0 0 0 0 {-L}" mass="{log["arm_mass"]}" contype="0" conaffinity="0"/>'
     if variant == "bam":
         act, joint_extra = '<motor name="j" joint="j" gear="1"/>', ""
     else:
@@ -56,7 +59,7 @@ def run(log, variant):
     model = load_model(a.params)
     act = model.actuator
     act.kp = log["kp"]
-    act.vin = a.vin
+    act.vin = a.vin if a.vin is not None else log.get("vin", 7.4)
     pd_params = to_mujoco(act) if variant == "pd" else None
     mj = build(log, variant, pd_params)
     d = mujoco.MjData(mj)
