@@ -44,7 +44,7 @@ SCREW_D, HEAD_D, UNDER_HEAD = 2.2, 4.6, 2.5
 L1, L2, T = 100.0, 80.0, 6.0             # joint-to-joint, joint-to-tip, plate thickness
 NANO_R = 60.0                             # Nano centre on the lower link
 WALL, WALL_H = 3.0, 16.0                  # pocket walls and their height above the plate
-PIN_HOLE = 1.4                            # Nano header pin holes
+PIN_HOLE = 1.6                            # Nano header pin holes (1.4 printed too tight on the P1S: the pins only went in after widening)
 
 
 def hub_holes(x0=0.0):
@@ -111,7 +111,7 @@ def lower_link():
     part = thin_hub(part)
     part = drill(part, hub_holes(0.0))
     # one hole per header pin: two rows 15.24 apart, 15 pins at 2.54 (first/last 3.81 mm from the board ends).
-    # 1.4 mm holes for 0.64 mm square pins (0.9 mm diagonal): FDM holes print ~0.2-0.3 mm small, so they end up ~1.1-1.2 mm.
+    # 0.64 mm square pins (0.9 mm diagonal); FDM holes print small. 1.4 mm was too tight in practice, so 1.6 mm.
     for y in (-15.24 / 2, 15.24 / 2):
         for k in range(15):
             x = NANO_R - 43.16 / 2 + 3.81 + 2.54 * k

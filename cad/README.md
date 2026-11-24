@@ -16,10 +16,21 @@ both parts flat). The fit is checked in the script against official models:
 | Servo 2's axis | same | exactly 100.0 mm from servo 1's axis |
 | Hub thickness | the measuring arms (`bam_meetarmen.py`) | 4 mm under the M3 × 6 horn screws on both links, rising to 6 mm from 12 to 28 mm |
 | Lower-link hub against servo 2's horn | same | the 4 horn holes (±4.95 mm) line up with the M3 holes; the centre hole clears the horn screw |
-| Nano header pin holes | Arduino datasheet ABX00027, section 6 | one 1.4 mm hole per pin (2 × 15), rows 15.24 mm apart, 2.54 mm pitch, first pin 3.81 mm from the board end. If they print too tight, open them with a 1.2 mm drill |
+| Nano header pin holes | Arduino datasheet ABX00027, section 6 | one 1.6 mm hole per pin (2 × 15; 1.4 mm printed too tight), rows 15.24 mm apart, 2.54 mm pitch, first pin 3.81 mm from the board end. |
 
 **Assembly:** servo 2 goes into the pocket with its horn up and its connectors down through the window. Fix it from below with two of the
 small SO-101 servo screws into the two holes at the end of the case; the cable-tie slots are a spare option. The Nano's header pins drop into their 30 holes (no play, so the IMU cannot rattle), USB toward servo 2, held with two cable ties. Servo 1 → servo 2 with a
 3-pin bus cable (both servos need different IDs). Leave slack in both cables for ±90°.
 
 **Weigh the printed parts** and the complete lower link with the Nano. The simulation needs the real masses (`double_pendulum_params.json`).
+
+## What was actually printed (2026-11-24)
+
+The simulation must use the parts as built:
+
+| Part | Version | Notes |
+|---|---|---|
+| Lower link (Nano) | commit `32bb5cd`: **6 mm hub** (before the 4 mm hub fix), 1.4 mm pin holes | pin holes widened by hand until the pins fit. With the 6 mm hub, M3 × 6 screws do not reach servo 2's horn: use **M3 × 8 or M3 × 10**, or reprint the current version |
+| Upper link (servo pocket) | current version: 4 mm hub, body screws from below | |
+
+Masses: weigh both links and the lower link with the Nano mounted, and enter them in `double_pendulum_params.json`.

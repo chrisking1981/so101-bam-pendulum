@@ -5,7 +5,12 @@
  "servo_mass_g": 55.0,
  "nano_mass_g": 5.5,
  "upper_link_volume_mm3": 22514.281476144588,
- "lower_link_volume_mm3": 11639.703835504517,
+ "lower_link_volume_mm3": 11554.915983995672,
  "servo2_axis_height_above_link1_bottom_mm": 42.4,
- "note": "link masses depend on infill: weigh the printed parts and put the real values here"
+ "note": "link masses depend on infill: weigh the printed parts and put the real values here",
+ "as_built": {
+  "lower_link": "commit 32bb5cd: 6 mm hub (needs M3x8/M3x10 horn screws), 1.4 mm pin holes widened by hand; hub geometry differs from the current file",
+  "upper_link": "current version (4 mm hub, body screws)",
+  "masses_g": "to be weighed"
+ }
 }
