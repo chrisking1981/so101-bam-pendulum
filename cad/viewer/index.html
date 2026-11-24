@@ -1,0 +1,127 @@
+<title>Dubbele pendel 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap">
+<style>
+/* Layout: one workshop bench view — 3D canvas fills the stage, a compact parts panel beside it (stacks under it on phones). */
+:root {
+  --bg: #f3f4f2; --panel: #ffffff; --fg: #1d2126; --muted: #5d6670; --line: #d9ddd8; --accent: #c9822b; --stage: #e6e9e5;
+  --sans: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif; --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #15181b; --panel: #1d2125; --fg: #e8ebe7; --muted: #9aa3ab; --line: #30363b; --accent: #e3a24f; --stage: #101315; color-scheme: dark } }
+:root[data-theme="dark"] { --bg: #15181b; --panel: #1d2125; --fg: #e8ebe7; --muted: #9aa3ab; --line: #30363b; --accent: #e3a24f; --stage: #101315; color-scheme: dark }
+html, body { height: 100%; }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); font-size: 15px; line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 16px; box-sizing: border-box; }
+.wrap { display: grid; grid-template-columns: minmax(0, 1fr) 300px; gap: 16px; max-width: 1200px; margin: 0 auto; }
+@media (max-width: 820px) { .wrap { grid-template-columns: minmax(0, 1fr); } }
+.stage { position: relative; background: var(--stage); border: 1px solid var(--line); border-radius: 10px; height: min(72vh, 640px); min-height: 360px; overflow: hidden; }
+canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+.hint { position: absolute; left: 12px; bottom: 10px; font-size: 12px; color: var(--muted); }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 16px; display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+h1 { font-size: 18px; font-weight: 500; margin: 0; text-wrap: balance; }
+.note { font-size: 13.5px; color: var(--fg); margin: 0; }
+.note b { font-weight: 500; }
+.label { font-size: 11.5px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin: 0 0 6px; }
+.parts { display: flex; flex-direction: column; gap: 6px; }
+.parts label { display: flex; align-items: center; gap: 8px; cursor: pointer; font-size: 14px; }
+.sw { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--line); flex: none; }
+.slider { display: grid; grid-template-columns: 54px minmax(0, 1fr) 46px; align-items: center; gap: 8px; font-size: 14px; }
+.slider output { font-family: var(--mono); font-size: 13px; text-align: right; font-variant-numeric: tabular-nums; }
+input[type=range] { width: 100%; accent-color: var(--accent); }
+input[type=checkbox] { accent-color: var(--accent); }
+button { font: inherit; font-size: 13px; border: 1px solid var(--line); background: transparent; color: var(--fg); border-radius: 6px; padding: 5px 10px; cursor: pointer; }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.status { font-size: 13px; color: var(--muted); }
+</style>
+
+<div class="wrap">
+  <div class="stage" id="stage"><canvas id="c" aria-label="Draaibaar 3D-model van de dubbele pendel"></canvas>
+    <div class="hint">Slepen = draaien · scrollen of knijpen = zoomen · rechts slepen = schuiven</div></div>
+  <div class="panel">
+    <h1>Dubbele pendel, stap 2a</h1>
+    <p class="note"><b>Horn naar boven.</b> Servo 2 staat met zijn horn omhoog in het bakje; op die horn komt de onderarm. Het <b>gat onderin het bakje</b> is voor de twee kabelstekkers aan de achterkant van de servo. Daaronder zitten ook de twee schroefjes.</p>
+    <div>
+      <p class="label">Onderdelen</p>
+      <div class="parts" id="parts"></div>
+    </div>
+    <div>
+      <p class="label">Gewrichten</p>
+      <div class="slider"><span>Heup</span><input id="j1" type="range" min="-90" max="90" value="0"><output id="o1">0°</output></div>
+      <div class="slider"><span>Knie</span><input id="j2" type="range" min="-120" max="120" value="0"><output id="o2">0°</output></div>
+    </div>
+    <div class="btns">
+      <button id="vSide" type="button">Van voren</button>
+      <button id="vIso" type="button">Schuin</button>
+      <button id="vUnder" type="button">Van onderen</button>
+    </div>
+    <p class="status" id="status">Model laden…</p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script>
+(function () {
+  const canvas = document.getElementById('c'), stage = document.getElementById('stage'), status = document.getElementById('status');
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(35, 1, 1, 5000);
+  const controls = new THREE.OrbitControls(camera, canvas);
+  controls.enableDamping = true;
+  scene.add(new THREE.HemisphereLight(0xffffff, 0x777777, 0.85));
+  const key = new THREE.DirectionalLight(0xffffff, 0.75); key.position.set(150, 220, 260); scene.add(key);
+  const fill = new THREE.DirectionalLight(0xffffff, 0.35); fill.position.set(-200, -80, -150); scene.add(fill);
+
+  // joints: hip about world Y through the origin, knee about world Y through (0, *, -100)
+  const hip = new THREE.Group(); scene.add(hip);
+  const kneePivot = new THREE.Group(); kneePivot.position.set(0, 0, -100); hip.add(kneePivot);
+  const knee = new THREE.Group(); knee.position.set(0, 0, 100); kneePivot.add(knee);
+  const where = { 'Bovenarm (print)': hip, 'Servo 2 (in bakje)': hip, 'Onderarm (print)': knee, 'Nano 33 IoT': knee };
+  const meshes = {};
+
+  function b64(s, Type) { const bin = atob(s), u8 = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i); return new Type(u8.buffer); }
+
+  fetch('assembly.json').then(r => { if (!r.ok) throw new Error(r.status); return r.json(); }).then(parts => {
+    const list = document.getElementById('parts');
+    parts.forEach((p, i) => {
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.BufferAttribute(b64(p.pos, Float32Array), 3));
+      g.setIndex(new THREE.BufferAttribute(b64(p.idx, Uint32Array), 1));
+      g.computeVertexNormals();
+      const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.65, metalness: 0.05, flatShading: true, side: THREE.DoubleSide }));
+      (where[p.name] || scene).add(m); meshes[p.name] = m;
+      const id = 'part' + i, lab = document.createElement('label');
+      lab.innerHTML = '<input type="checkbox" checked id="' + id + '"><span class="sw" style="background:' + p.color + '"></span><span></span>';
+      lab.lastChild.textContent = p.name;
+      lab.querySelector('input').addEventListener('change', e => { m.visible = e.target.checked; });
+      list.appendChild(lab);
+    });
+    status.textContent = 'Officieel STS3215-model (SO-ARM100) en de geprinte delen uit double_pendulum.py.';
+    view('iso');
+  }).catch(() => { status.textContent = 'Het model kon niet geladen worden.'; });
+
+  function view(kind) {
+    const t = new THREE.Vector3(0, 10, -90); controls.target.copy(t);
+    if (kind === 'side') camera.position.set(0, 420, -90);
+    else if (kind === 'under') camera.position.set(60, -330, -40);
+    else camera.position.set(260, 230, 60);
+    camera.up.set(0, 0, 1); controls.update();
+  }
+  document.getElementById('vSide').onclick = () => view('side');
+  document.getElementById('vIso').onclick = () => view('iso');
+  document.getElementById('vUnder').onclick = () => view('under');
+  function joint(id, out, grp) {
+    const el = document.getElementById(id), o = document.getElementById(out);
+    el.addEventListener('input', () => { grp.rotation.y = THREE.MathUtils.degToRad(+el.value); o.textContent = el.value + '°'; });
+  }
+  joint('j1', 'o1', hip); joint('j2', 'o2', kneePivot);
+
+  function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+  new ResizeObserver(resize).observe(stage); resize();
+  (function loop() { controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+})();
+</script>
