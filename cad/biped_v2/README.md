@@ -21,7 +21,7 @@ infill, 4 walls, supports on the torso, hips and legs). Interactive 3D model wit
 | Foot | 2 (mirrored) | clevis on the ankle horns, sole 105 × 52 mm |
 
 Dimensions: hip axes 70 mm apart; roll axis 188 mm, hip-pitch axis 132 mm and ankle axis 22 mm above the floor; about 226 mm tall.
-Printed parts about 110 g (slicer estimate to follow), six servos 354 g: about 0.47 kg with the Nano.
+Printed parts about 150 g (estimate at 40 % infill), six servos 354 g: about 0.51 kg with the Nano, close to the 0.5 kg of the simulation sketch.
 
 ## Checks (all in the script)
 | Check | Result |
