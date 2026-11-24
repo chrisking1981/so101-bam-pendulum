@@ -10,7 +10,7 @@ Dimensions come from official models, not guesses:
 
 Upper link: hub for servo 1's horn (4 x M3, like BAM-kort-100), 100 mm to servo 2's axis, then a pocket that holds servo 2's case with
 0.25 mm clearance, a through window for its connectors (the cable leaves underneath) and two cable-tie slots.
-Lower link: hub for servo 2's horn, Nano seat at 60 mm with two slots its header pins drop into (USB toward the joint), two cable-tie slots.
+Lower link: hub for servo 2's horn, Nano seat at 60 mm with one 1.4 mm hole per header pin (30), so the board cannot shift or rattle\n(USB toward the joint), two cable-tie slots.
 
     uv run --no-project --with build123d --with trimesh --with manifold3d python cad/double_pendulum.py
 Writes double_pendulum.3mf (both links, print flat), cad/double_pendulum_assembly.stl (with the official servo for checking) and
@@ -38,6 +38,7 @@ CLR = 0.25
 L1, L2, T = 100.0, 80.0, 6.0             # joint-to-joint, joint-to-tip, plate thickness
 NANO_R = 60.0                             # Nano centre on the lower link
 WALL, WALL_H = 3.0, 16.0                  # pocket walls and their height above the plate
+PIN_HOLE = 1.4                            # Nano header pin holes
 
 
 def hub_holes(x0=0.0):
@@ -85,10 +86,12 @@ def lower_link():
     part += b.Pos(NANO_R, 0, 0) * b.Box(pad_l, nano_w + 10, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     part += b.Pos(L2, 0, 0) * b.Cylinder(8, T, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     part = drill(part, hub_holes(0.0))
-    # header pin slots: two rows 15.24 apart, pins from 3.81 to 39.37 mm along the board -> slot 1.6 wide
-    row_len = 14 * 2.54 + 1.6
+    # one hole per header pin: two rows 15.24 apart, 15 pins at 2.54 (first/last 3.81 mm from the board ends).
+    # 1.4 mm holes for 0.64 mm square pins (0.9 mm diagonal): FDM holes print ~0.2-0.3 mm small, so they end up ~1.1-1.2 mm.
     for y in (-15.24 / 2, 15.24 / 2):
-        part -= b.Pos(NANO_R, y, -1) * b.Box(row_len, 1.6, T + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
+        for k in range(15):
+            x = NANO_R - 43.16 / 2 + 3.81 + 2.54 * k
+            part -= b.Pos(x, y, -1) * b.Cylinder(PIN_HOLE / 2, T + 2, align=(b.Align.CENTER, b.Align.CENTER, b.Align.MIN))
     # cable-tie slots either side of the board, between the rows ends
     for x in (NANO_R - nano_l / 2 + 2, NANO_R + nano_l / 2 - 2):
         for y in (-(nano_w / 2 + 3), nano_w / 2 + 3):
@@ -150,6 +153,10 @@ params = dict(L1_m=L1 / 1000, L2_m=L2 / 1000, nano_r_m=NANO_R / 1000, servo_mass
               servo2_axis_height_above_link1_bottom_mm=T - BACK_Z + HORN_TOP,
               note="link masses depend on infill: weigh the printed parts and put the real values here")
 json.dump(params, open(HERE / "double_pendulum_params.json", "w"), indent=1)
+# the 30 pin holes sit exactly on the datasheet grid
+pin_x = [NANO_R - 43.16 / 2 + 3.81 + 2.54 * k for k in range(15)]
+assert abs(pin_x[0] - (NANO_R - 43.16 / 2 + 3.81)) < 1e-9 and abs(pin_x[-1] - (NANO_R + 43.16 / 2 - 3.79)) < 0.05
+print(f"Nano pin holes: 2 x 15, x {pin_x[0]:.2f}..{pin_x[-1]:.2f} mm, rows at y = +-7.62 mm, diameter {PIN_HOLE} mm")
 print("wrote double_pendulum.3mf, cad/double_pendulum_assembly.stl, cad/double_pendulum_params.json")
 
 # --- Bambu Studio per-object settings: sturdy, and a known infill so the printed mass is predictable (weigh the parts anyway)
