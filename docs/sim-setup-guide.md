@@ -65,6 +65,7 @@ Read these registers on every servo, set them equal, and include them in the sta
 ## 5. What to randomize, and how much
 
 All ranges below are proposals based on the spread measured here; they are not yet validated with a trained policy.
+For the 12 V robot, the complete, up-to-date list (with IMU and latency numbers) is the [training checklist](training-checklist.md).
 
 | Quantity | Proposed range | Evidence |
 |---|---|---|
@@ -72,7 +73,7 @@ All ranges below are proposals based on the spread measured here; they are not y
 | Motor strength / supply voltage (`vin_range`) | Battery range, e.g. 6.8–8.2 V for 2S | Torque and speed scale with voltage. Tracking error differs by only 3–9% between units |
 | Voltage sag (`vin_drop_resistance_range`) | Small, measure on the robot | Not measured here: a bench supply was used |
 | Command delay (`delay_min_lag` / `delay_max_lag`) | 0 to one control step plus the measured loop latency | Bus round trip 0.34 ms; the servo flags *moving* 1.5 ms after a goal write. The fitted `command_delay` is 1.5–2.2 ms. The real latency is set by the robot's control loop, so measure it there |
-| Backlash | about ±1° (as in Microduck) | Not measured here |
+| Backlash | 0–0.5° total for the 12 V 1:345 (Microduck's ±1° is for the plastic-geared XL330) | [Measured on three 12 V units](../measurements/STS3215-12V/20261124-backlash-id3-id2-id6/README.md): not measurable by eye |
 
 Keep the type-specific model as the centre, and do not widen ranges to cover other servo types (see section 2).
 
@@ -103,5 +104,4 @@ Keep the type-specific model as the centre, and do not widen ranges to cover oth
 
 - A fit for the C001 with its own data (Rhoban's model already predicts it to about 1°).
 - The full randomization setup in mjlab, and a multi-joint robot model.
-- The 12 V 1:345 follower servos.
-- Measuring the control-loop latency and battery sag on the actual robot.
+- Measuring the control-loop latency and battery sag on the actual robot (see the [training checklist](training-checklist.md)).

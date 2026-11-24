@@ -7,6 +7,8 @@ A printable bench arm for measuring Feetech STS3215-C001 (1:345), C044 (1:191) a
 
 **How to set up the simulation, based on these measurements: [docs/sim-setup-guide.md](docs/sim-setup-guide.md).**
 
+**Before training a robot, read the [sim2real training checklist](docs/training-checklist.md).**
+
 ## Findings so far (no load, 2026-11-23)
 
 Six leader-arm servos were measured (C001, two C044 units and three C046 units), each with only the metal horn attached and at 7.40 V. Each one replayed the exact
