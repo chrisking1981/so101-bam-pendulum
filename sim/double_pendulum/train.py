@@ -6,7 +6,8 @@ import argparse, os, sys, time
 import numpy as np
 import torch
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from dp_env import DPEnv as PendEnv
+from dp_env import DPEnv as _DPEnv
+import functools
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import SubprocVecEnv, VecMonitor, VecNormalize
 from stable_baselines3.common.callbacks import BaseCallback
@@ -53,7 +54,9 @@ if __name__ == "__main__":
     ap.add_argument("--steps", type=int, default=400_000)
     ap.add_argument("--envs", type=int, default=6)
     ap.add_argument("--out", default=os.path.join(HERE, "runs", "p1"))
+    ap.add_argument("--rig", default="12v")
     a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
+    PendEnv = functools.partial(_DPEnv, rig=a.rig)
     env = VecNormalize(VecMonitor(SubprocVecEnv([lambda: PendEnv(randomize=True) for _ in range(a.envs)])), norm_obs=True, norm_reward=True, clip_obs=10.0)
     model = PPO("MlpPolicy", env, n_steps=512, batch_size=1024, n_epochs=8, learning_rate=3e-4, gamma=0.98, ent_coef=0.0,
                 policy_kwargs=dict(net_arch=[64, 64], log_std_init=-1.0), device="cpu", seed=0, verbose=0)

@@ -44,8 +44,10 @@ XML = """
 """
 
 
-def build(dt=0.002, scale=None):
+def build(dt=0.002, scale=None, servo2=None):
     m = dict(NOMINAL)
+    if servo2 is not None:
+        m["servo2"] = servo2
     if scale:
         m = {k: v * scale.get(k, 1.0) for k, v in m.items()}
     return mujoco.MjModel.from_xml_string(XML.format(dt=dt, L1=L1, **m))

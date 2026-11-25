@@ -9,9 +9,17 @@ REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 sys.path.insert(0, os.path.join(REPO, "scripts", "imu"))
 from nano_imu import NanoIMU
 from bam.feetech.sts import STS, STEP
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import argparse, rig as rigmod
+_ap = argparse.ArgumentParser(); _ap.add_argument("--rig", default="12v"); _ap.add_argument("--knee-id", type=int); _a = _ap.parse_args()
+RIG = rigmod.get(_a.rig, _a.knee_id if _a.rig == "c044knee" else None)
 
-imu = NanoIMU("/dev/cu.usbmodem1301"); imu.s.write(b"c"); time.sleep(2.6); imu.read_all()
-hip = STS("/dev/cu.usbmodem5B421346401", 6); knee = copy.copy(hip); knee.id = 2
+imu = NanoIMU(rigmod.nano_port()); imu.s.write(b"c"); time.sleep(2.6); imu.read_all()
+hip = STS(RIG["hip"]["port"], RIG["hip"]["id"])
+if RIG["knee"]["port"] == RIG["hip"]["port"]:
+    knee = copy.copy(hip); knee.id = RIG["knee"]["id"]
+else:
+    knee = STS(RIG["knee"]["port"], RIG["knee"]["id"])
 ms = [hip, knee]; orig = [(m.c.read_p_coefficient(m.id)[0], m.c.read_d_coefficient(m.id)[0]) for m in ms]
 zero = [m.read_raw()[0] for m in ms]
 S = []
@@ -36,7 +44,7 @@ try:
                 pos, spd, load, v, temp = m.read_raw(); q.append((pos - z) * STEP); ld.append(load)
             new = imu.read_all()
             if new: last = new[-1]
-            tilt = np.arctan2(last[4][1], last[4][0]) - a0; gyro = last[2][2]
+            tilt = (np.arctan2(last[4][1], last[4][0]) - a0 + np.pi) % (2 * np.pi) - np.pi; gyro = -last[2][2]
             t = time.time() - t0
             rows.append((t, q[0], q[1], tilt, gyro))
             if t >= nxt:

@@ -13,13 +13,19 @@ sys.path.insert(0, HERE); sys.path.insert(0, os.path.join(REPO, "scripts", "imu"
 from dp_env import test_targets, ACTION_SCALE, KP_FW, LIM
 from nano_imu import NanoIMU
 from bam.feetech.sts import STS, STEP
+import rig as rigmod
 
 ap = argparse.ArgumentParser(); ap.add_argument("--onnx", required=True); ap.add_argument("--out", required=True)
+ap.add_argument("--rig", default="12v"); ap.add_argument("--knee-id", type=int)
 a = ap.parse_args()
 sess = ort.InferenceSession(a.onnx)
-imu = NanoIMU("/dev/cu.usbmodem1301"); imu.s.write(b"c"); time.sleep(2.6); imu.read_all()
-hip = STS("/dev/cu.usbmodem5B421346401", 6); knee = copy.copy(hip); knee.id = 2
-assert hip.c.ping(2) and hip.c.read_lock(2)[0]
+RIG = rigmod.get(a.rig, a.knee_id if a.rig == "c044knee" else None)
+imu = NanoIMU(rigmod.nano_port()); imu.s.write(b"c"); time.sleep(2.6); imu.read_all()
+hip = STS(RIG["hip"]["port"], RIG["hip"]["id"])
+if RIG["knee"]["port"] == RIG["hip"]["port"]:
+    knee = copy.copy(hip); knee.id = RIG["knee"]["id"]; assert hip.c.ping(knee.id) and hip.c.read_lock(knee.id)[0]
+else:
+    knee = STS(RIG["knee"]["port"], RIG["knee"]["id"])
 ms = [hip, knee]; orig = [(m.c.read_p_coefficient(m.id)[0], m.c.read_d_coefficient(m.id)[0]) for m in ms]
 zero = [m.read_raw()[0] for m in ms]
 S = []

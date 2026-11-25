@@ -15,7 +15,8 @@ import numpy as np
 import gymnasium as gym
 import mujoco
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-from dp_model import build, PARAMS
+from dp_model import build
+import rig as rigmod
 from bam.model import load_model
 from bam.mujoco import MujocoController
 
@@ -29,12 +30,17 @@ def test_targets():
 
 
 class DPEnv(gym.Env):
-    def __init__(self, randomize=True, episode_s=6.0, schedule=None):
+    VIN_RANGE = {12.0: (11.0, 12.6), 5.0: (4.8, 5.4)}   # 5 V: covers the measured 4.8-4.9 V and the faster-than-model 5.2-5.3 V
+
+    def __init__(self, randomize=True, episode_s=6.0, schedule=None, rig="12v"):
         super().__init__()
+        self.rig = rigmod.get(rig) if rig != "c044knee" else rigmod.get(rig, 1)
         self.randomize, self.max_steps, self.schedule = randomize, int(episode_s * 50), schedule
         self.action_space = gym.spaces.Box(-1, 1, (2,), np.float32)
         self.observation_space = gym.spaces.Box(-np.inf, np.inf, (13,), np.float32)
-        self.model = load_model(PARAMS); self.model.actuator.kp = KP_FW
+        self.models = {j: load_model(self.rig[j]["params"]) for j in ("hip", "knee")}
+        for mo in self.models.values():
+            mo.actuator.kp = KP_FW
 
     def _targets(self):
         if self.schedule is not None:
@@ -62,14 +68,17 @@ class DPEnv(gym.Env):
         if self.randomize:
             scale = dict(upper_link=r.uniform(0.75, 1.25), servo2=r.uniform(0.95, 1.05), lower_link=r.uniform(0.85, 1.15),
                          nano=r.uniform(0.85, 1.15), screws=r.uniform(0.85, 1.15), cable=r.uniform(0.6, 1.4))
-            self.fscale, vin, self.delay = r.uniform(0.7, 1.3), r.uniform(11.0, 12.6), int(r.integers(0, 6))
+            self.fscale, self.delay = r.uniform(0.7, 1.3), int(r.integers(0, 6))
+            vins = {j: r.uniform(*self.VIN_RANGE[self.rig[j]["vin"]]) for j in ("hip", "knee")}
             self.k_cable, self.f_cable = r.uniform(0, 0.01, 2), r.uniform(0, 0.01, 2)
         else:
-            scale, self.fscale, vin, self.delay = None, 1.0, 12.0, 0
+            scale, self.fscale, self.delay = None, 1.0, 0
+            vins = {j: self.rig[j]["vin"] for j in ("hip", "knee")}
             self.k_cable, self.f_cable = np.zeros(2), np.zeros(2)
-        self.m = build(scale=scale); self.d = mujoco.MjData(self.m)
-        self.model.actuator.vin = vin
-        self.ctrl = MujocoController(self.model, ["hip", "knee"], self.m, self.d)
+        self.m = build(scale=scale, servo2=self.rig["knee"]["mass"]); self.d = mujoco.MjData(self.m)
+        for j in ("hip", "knee"):
+            self.models[j].actuator.vin = vins[j]
+        self.ctrls = {j: MujocoController(self.models[j], [j], self.m, self.d) for j in ("hip", "knee")}
         self.d.qpos[:] = r.uniform(-0.05, 0.05, 2) if self.randomize else 0.0
         mujoco.mj_forward(self.m, self.d)
         self.t, self.steps, self.last_a, self.tilt_err, self.qd_prev = 0.0, 0, np.zeros(2), 0.0, np.zeros(2)
@@ -82,7 +91,8 @@ class DPEnv(gym.Env):
         goal = np.clip(ACTION_SCALE * a, -LIM, LIM)
         for _ in range(SUB):
             self.queue.append(goal); g = self.queue.pop(0)
-            self.ctrl.set_q_target("hip", g[0]); self.ctrl.set_q_target("knee", g[1]); self.ctrl.update()
+            self.ctrls["hip"].set_q_target("hip", g[0]); self.ctrls["knee"].set_q_target("knee", g[1])
+            self.ctrls["hip"].update(); self.ctrls["knee"].update()
             if self.fscale != 1.0:
                 self.m.dof_frictionloss[:] = self.m.dof_frictionloss * self.fscale + self.f_cable
             else:

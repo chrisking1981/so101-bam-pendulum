@@ -9,12 +9,13 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from dp_env import DPEnv, test_targets, ACTION_SCALE
 
 ap = argparse.ArgumentParser(); ap.add_argument("--onnx", required=True); ap.add_argument("--real"); ap.add_argument("--plot")
+ap.add_argument("--rig", default="12v")
 a = ap.parse_args()
 sess = ort.InferenceSession(a.onnx); sched = test_targets(); steps = int((sched[-1][0] + 1.5) / 0.02)
 
 
 def episode(randomize, seed):
-    e = DPEnv(randomize=randomize, episode_s=steps * 0.02 + 1, schedule=sched); o, _ = e.reset(seed=seed); out = []
+    e = DPEnv(randomize=randomize, episode_s=steps * 0.02 + 1, schedule=sched, rig=a.rig); o, _ = e.reset(seed=seed); out = []
     for k in range(steps):
         act = sess.run(None, {"obs": o[None].astype(np.float32)})[0][0]
         o, r, _, _, info = e.step(act); out.append((0.02 * (k + 1), *info["q"], *info["target"], *np.clip(act, -1, 1)))
@@ -37,7 +38,7 @@ if a.real:
 if a.plot:
     import matplotlib; matplotlib.use("Agg"); import matplotlib.pyplot as plt
     fig, ax = plt.subplots(2, 2, figsize=(13, 6), sharex=True)
-    for j, n in enumerate(["hip (ID 6)", "knee (ID 2)"]):
+    for j, n in enumerate(["hip", "knee"]):
         for x in rnd: ax[0, j].plot(x[:, 0], np.degrees(x[:, 1 + j]), color="C1", alpha=.25, lw=.8)
         ax[0, j].plot(nom[:, 0], np.degrees(nom[:, 3 + j]), "k:", label="target"); ax[0, j].plot(nom[:, 0], np.degrees(nom[:, 1 + j]), "C1", label="sim")
         ax[1, j].plot(nom[:, 0], np.degrees(nom[:, 5 + j] * ACTION_SCALE), "C1", label="sim action (goal deg)")

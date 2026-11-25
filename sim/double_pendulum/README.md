@@ -56,3 +56,27 @@ the model check above by less than 0.01°.
 
 **Second real run** (same policy): real vs sim 0.20° / 0.27° mean (hip / knee), 100% inside the randomized band, no oscillation.
 Run 1 vs run 2 differ by only 0.09° / 0.10° mean, so the real arm is very repeatable.
+
+## Two C044 servos at 5 V (2026-11-25, rig `c044both`)
+
+Hip = C044 ID 3, knee = C044 ID 1, both on the leader-arm board with its 5 V adapter; the 12 V board is not used. Every script takes
+`--rig` (setups in [`rig.py`](rig.py)). Models: the C044 **m4** fit (made at 7.4 V) at 5 V, servo mass 57 g. Overview with explanation:
+[showcase/01-double-pendulum-c044](../../showcase/01-double-pendulum-c044/README.md).
+
+**Model check** ([table](data/traj_compare_c044.md), [plot](data/traj_compare_c044.png)): sim vs real 0.15–0.61° on all trajectories
+except the fast knee square wave (3.26°): at full speed the real servo is slightly faster than the model at 5.0 V (0.92° with 5.2 V in the
+model). Training therefore randomizes the supply between 4.8 and 5.4 V.
+
+**Policy** (`runs/c044_1`, 1.5 M steps, 10.5 min): sim 3.82° / 5.23° tracking (hip / knee), randomized 3.95° / 5.35°, no oscillation while holding.
+
+![c044 policy](data/c044_real_vs_sim.png)
+
+| | Hip | Knee |
+|---|---:|---:|
+| Tracking error, real (sim) | 3.84° (3.82°) | 5.15° (5.23°) |
+| **Real vs sim**, mean / max | **0.33° / 2.95°** | **0.34° / 3.17°** |
+| Real inside the randomized sim band | 96% | 99% |
+| Action std while holding, real | 0.07° | 0.07° |
+
+First run on the real arm, no changes after training. Loop: 20.00 ms period (max 21.1), 1.7 ms work, IMU data every tick; Nano tilt vs
+hip + knee 0.62° mean.

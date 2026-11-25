@@ -8,13 +8,18 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from bam.feetech.sts import STS, STEP
 from trajectories import TRAJ, goals
+import rig as rigmod
 
-ap = argparse.ArgumentParser(); ap.add_argument("--port", default="/dev/cu.usbmodem5B421346401"); ap.add_argument("--kp", type=int, default=32)
+ap = argparse.ArgumentParser(); ap.add_argument("--rig", default="12v"); ap.add_argument("--knee-id", type=int); ap.add_argument("--kp", type=int, default=32)
 ap.add_argument("--out", required=True); ap.add_argument("--only", nargs="*")
 a = ap.parse_args()
 LIM = np.radians(80)
-hip = STS(a.port, 6); knee = copy.copy(hip); knee.id = 2
-assert hip.c.ping(2) and hip.c.read_lock(2)[0]
+RIG = rigmod.get(a.rig, a.knee_id if a.rig == "c044knee" else None)
+hip = STS(RIG["hip"]["port"], RIG["hip"]["id"])
+if RIG["knee"]["port"] == RIG["hip"]["port"]:
+    knee = copy.copy(hip); knee.id = RIG["knee"]["id"]; assert hip.c.ping(knee.id) and hip.c.read_lock(knee.id)[0]
+else:
+    knee = STS(RIG["knee"]["port"], RIG["knee"]["id"])
 ms = [hip, knee]
 orig = [(m.c.read_p_coefficient(m.id)[0], m.c.read_d_coefficient(m.id)[0]) for m in ms]
 zero = [m.read_raw()[0] for m in ms]
@@ -47,5 +52,5 @@ finally:
     for m, o in zip(ms, orig):
         m.torque(False); m.set_gains(*o)
 os.makedirs(os.path.dirname(os.path.abspath(a.out)), exist_ok=True)
-np.savez(a.out, **logs, columns=np.array("t goal_hip goal_knee hip_q hip_qd hip_load hip_v knee_q knee_qd knee_load knee_v t_end".split()), kp=a.kp, zero=np.array(zero))
+np.savez(a.out, **logs, rig=a.rig, columns=np.array("t goal_hip goal_knee hip_q hip_qd hip_load hip_v knee_q knee_qd knee_load knee_v t_end".split()), kp=a.kp, zero=np.array(zero))
 print("saved", a.out)
