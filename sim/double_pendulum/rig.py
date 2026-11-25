@@ -15,8 +15,8 @@ RIGS = {
                 knee=dict(port=BUS12, id=2, params=F12, vin=12.0, mass=0.059)),
     "c044both": dict(hip=dict(port=BUS_LEADER, id=3, params=C044, vin=5.0, mass=0.057),
                      knee=dict(port=BUS_LEADER, id=1, params=C044, vin=5.0, mass=0.057)),
-    "c044knee": dict(hip=dict(port=BUS12, id=6, params=F12, vin=12.0, mass=0.059),
-                     knee=dict(port=BUS_LEADER, id=None, params=C044, vin=5.0, mass=0.057)),   # id set with --knee-id
+    "c044knee": dict(hip=dict(port=BUS12, id=3, params=F12, vin=12.0, mass=0.059),
+                     knee=dict(port=BUS_LEADER, id=1, params=C044, vin=5.0, mass=0.057)),   # C044 ID 1 in the pocket; other unit: --knee-id
 }
 
 

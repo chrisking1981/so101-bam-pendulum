@@ -98,6 +98,30 @@ The orange line is almost invisible because the blue line is on top of it.
 within a few hundredths of a degree. The controller holds still at the targets, and the IMU on the moving link agrees with the servo
 encoders.
 
+## Bonus: a 12 V hip with a C044 knee (the real robot's mix)
+
+The real biped will use 12 V follower servos (1:345) in the hips and C044s (1:191, 5 V) as knees. So the table servo was swapped for a
+12 V STS3215 (bus ID 3) on its own 12 V board, and the C044 knee stayed in the pocket on the 5 V board. The two supplies must never
+share a bus, so each servo has its own cable to its own board. Both buses and the Nano are read in the same 50 Hz loop.
+
+**Model check** ([table](../../sim/double_pendulum/data/traj_compare_c044knee.md), [plot](../../sim/double_pendulum/data/traj_compare_c044knee.png)):
+sim vs real 0.06–0.23° on the hip and 0.13–0.52° on the knee, except the very fast knee square wave (3.33°, as with two C044s).
+The stiffer 12 V hip is pushed only 0.50° by the fast knee (C044 hip: 0.90°).
+
+**Policy** (retrained for this mix, 10 min), first run on the real arm:
+
+![12 V hip + C044 knee](../../sim/double_pendulum/data/c044knee_real_vs_sim.png)
+
+| | Hip (12 V) | Knee (C044, 5 V) |
+|---|---:|---:|
+| Tracking error, real (simulation) | 4.06° (3.91°) | 5.08° (5.21°) |
+| **Real vs simulation**, mean | **0.24°** | **0.44°** |
+| Real inside the randomized simulation band | 99% | 98% |
+| Nano IMU angle vs hip + knee | 0.41° mean | |
+
+Mixing servo types and voltages works just as well. One small difference: while holding, the real controller's goal jitters about
+0.3–0.4° (simulation 0.00°, two C044s 0.07°), visible around 9–10.5 s. The joints themselves stay steady.
+
 ## Why does it match so well?
 
 1. **Measured servos instead of guessed ones.** BAM models the friction and the motor, so the simulated servo is as slow and as
@@ -116,7 +140,8 @@ encoders.
 | One servo, learned controller | first sim2real test; found the late speed register | [pendulum_policy](../../sim/pendulum_policy/README.md) |
 | Two joints, 12 V servos | real vs sim 0.22° | [double_pendulum](../../sim/double_pendulum/README.md) |
 | **Two joints, C044 at 5 V** | **real vs sim 0.33°** | this page |
-| Next | the same with a 12 V hip and a C044 knee, then a small biped | [biped v3 CAD](../../cad/biped_v3/README.md) |
+| **12 V hip + C044 knee** | **real vs sim 0.24° / 0.44°** | this page, bonus |
+| Next | a small biped with 12 V hips and C044 knees | [biped v3 CAD](../../cad/biped_v3/README.md) |
 
 ## Run it yourself
 

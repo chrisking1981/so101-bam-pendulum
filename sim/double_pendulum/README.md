@@ -80,3 +80,20 @@ model). Training therefore randomizes the supply between 4.8 and 5.4 V.
 
 First run on the real arm, no changes after training. Loop: 20.00 ms period (max 21.1), 1.7 ms work, IMU data every tick; Nano tilt vs
 hip + knee 0.62° mean.
+
+## 12 V hip + C044 knee (2026-11-25, rig `c044knee`)
+
+Hip = 12 V follower ID 3 on the 12 V board, knee = C044 ID 1 on the leader board (5 V), each with its own cable to its own board.
+Manual check: Nano tilt vs hip + knee 0.11° mean, 0.40° max. Model check: [table](data/traj_compare_c044knee.md) (sim vs real 0.06–0.52°,
+fast knee 3.33°). Policy `runs/c044knee_1` (1.5 M steps, 10 min): sim 3.91° / 5.21°.
+
+| | Hip | Knee |
+|---|---:|---:|
+| Tracking error, real (sim) | 4.06° (3.91°) | 5.08° (5.21°) |
+| **Real vs sim**, mean / max | **0.24° / 2.19°** | **0.44° / 5.59°** |
+| Inside randomized band | 99% | 98% |
+| Action std while holding, real | 0.33° | 0.42° |
+
+![c044knee](data/c044knee_real_vs_sim.png)
+
+Loop 20.00 ms (max 20.00), 1.8 ms work; Nano tilt vs hip + knee 0.41°. The real action jitters slightly while holding (0.3–0.4°, sim 0.00°).
