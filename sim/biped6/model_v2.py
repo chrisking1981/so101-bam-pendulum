@@ -77,6 +77,7 @@ def build_xml(top_mass=0.0, dt=0.002):
     M, com, I = body["torso"]
     xml = f"""
 <mujoco>
+  <compiler angle="radian"/>
   <option timestep="{dt}" integrator="implicitfast"/>
   <visual><global offwidth="960" offheight="540"/></visual>
   <worldbody>

@@ -15,7 +15,7 @@ _spec = importlib.util.spec_from_file_location("pend_train", os.path.join(os.pat
 OnnxPolicy = None  # loaded in main (the pendulum trainer parses its own CLI at import, so only its class is taken)
 
 ap = argparse.ArgumentParser()
-ap.add_argument("--variant", required=True, help="roll, knee (sketches) or v2, v2_50, v2_100 (CAD model, grams on top)")
+ap.add_argument("--variant", required=True, help="roll, knee (sketches), v2, v2_50, v2_100 (CAD, grams on top) or v3_12v, v3_knee, v3_roll (8 servos; where the C044s go)")
 ap.add_argument("--steps", type=int, default=5_000_000); ap.add_argument("--envs", type=int, default=4); ap.add_argument("--out", required=True)
 a = ap.parse_args(); os.makedirs(a.out, exist_ok=True)
 

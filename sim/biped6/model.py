@@ -95,6 +95,7 @@ def build_xml(variant, dt=0.002):
         joints = ["hip_pitch_l", "knee_l", "ankle_l", "hip_pitch_r", "knee_r", "ankle_r"]
     xml = f"""
 <mujoco>
+  <compiler angle="radian"/>
   <option timestep="{dt}" integrator="implicitfast"/>
   <visual><global offwidth="960" offheight="540"/></visual>
   <worldbody>

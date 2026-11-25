@@ -1,5 +1,5 @@
 <meta charset="utf-8">
-<title>Biped met knieën</title>
+<title>Biped met elektronica</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Mono:wght@400&display=swap">
 <style>
@@ -37,11 +37,11 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 </style>
 
 <div class="wrap">
-  <div class="stage" id="stage"><canvas id="c" aria-label="Draaibaar 3D-model van de biped met acht servo's"></canvas>
+  <div class="stage" id="stage"><canvas id="c" aria-label="Draaibaar 3D-model van de biped met acht servo's, bordjes en kabels"></canvas>
     <div class="hint">Slepen = draaien · scrollen of knijpen = zoomen · rechts slepen = schuiven</div></div>
   <div class="panel">
-    <h1>Biped met knieën (8 servo's)</h1>
-    <p class="note">Vier servo's per been: heup-zijwaarts, heup, knie en enkel. Bovenbeen 80 mm (houdt de heup-servo en de knie-servo), onderbeen 60 mm (zit aan beide horns van de knie, houdt de enkel-servo). Romp, heupstuk en voet zoals versie 2.</p>
+    <h1>Biped met knieën en elektronica</h1>
+    <p class="note">Vier servo's per been. De heup-pitch is een C044 op 5 V (blauw), de andere zes zijn 12 V. Bovenop de romp een rekje met twee SO-101 bordplankjes: links het 12 V-bordje (heup-rol → knie → enkel, per been doorgelust), rechts het 5 V-bordje (alleen de twee C044's). Elk bordje heeft één servo-aansluiting, daarom een verdeelstukje 1 → 2 achter het rekje. De kabels lopen via klemmetjes aan de romp, het bovenbeen en het onderbeen en buigen mee met de gewrichten.</p>
     <div>
       <p class="label">Gewrichten</p>
       <div id="joints"></div>
@@ -50,6 +50,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       <button id="vIso" type="button">Schuin</button>
       <button id="vFront" type="button">Van voren</button>
       <button id="vSide" type="button">Van opzij</button>
+      <button id="vBack" type="button">Van achteren</button>
       <button id="reset" type="button">Rechtop</button>
       <button id="walk" type="button">Stap-pose</button>
     </div>
@@ -88,7 +89,18 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   scene.add(ground);
 
   const links = { torso: new THREE.Group() }; scene.add(links.torso);
-  const joints = {};
+  const joints = {}; const wires = [];
+  function updateWires() {
+    if (!wires.length) return;
+    scene.updateMatrixWorld(true);
+    wires.forEach(o => {
+      if (!o.mesh.visible) return;
+      const pts = o.w.pts.map(q => links[q.link].localToWorld(new THREE.Vector3(q.p[0], q.p[1], q.p[2])));
+      const curve = new THREE.CatmullRomCurve3(pts, false, 'centripetal');
+      const g = new THREE.TubeGeometry(curve, 6 * pts.length, 1.5, 8, false);
+      o.mesh.geometry.dispose(); o.mesh.geometry = g;
+    });
+  }
   function pivot(parent, point, axis) {   // a group rotating about `axis` through `point`, children in world coordinates
     const p = new THREE.Group(); p.position.set(point[0], point[1], point[2]); parent.add(p);
     const inner = new THREE.Group(); inner.position.set(-point[0], -point[1], -point[2]); p.add(inner);
@@ -116,6 +128,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       g.setIndex(new THREE.BufferAttribute(b64(p.idx, Uint32Array), 1)); g.computeVertexNormals();
       const m = new THREE.Mesh(g, new THREE.MeshStandardMaterial({ color: p.color, roughness: 0.65, metalness: 0.05, flatShading: true, side: THREE.DoubleSide }));
       links[p.link].add(m);
+      if (!p.name) return;
       const lab = document.createElement('label'); const id = 'part' + i;
       lab.innerHTML = '<input type="checkbox" checked id="' + id + '"><span class="sw"></span><span></span>';
       lab.querySelector('.sw').style.background = p.color; lab.lastChild.textContent = p.name;
@@ -131,13 +144,25 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
       J.set = v => { inp.value = v; out.textContent = Math.round(v) + '°'; J.j.pivot.rotation[J.j.axis] = THREE.MathUtils.degToRad(v); };
       inp.addEventListener('input', () => J.set(+inp.value));
     });
+    // cables: points fixed on links, re-bent every frame
+    const wireMat = { '12v': new THREE.MeshStandardMaterial({ color: 0xa8322a, roughness: 0.5 }), '5v': new THREE.MeshStandardMaterial({ color: 0xe0a21e, roughness: 0.5 }) };
+    const vis = { '12v': true, '5v': true };
+    D.wires.forEach(w => { const mesh = new THREE.Mesh(new THREE.BufferGeometry(), wireMat[w.volt]); scene.add(mesh); wires.push({ w, mesh }); });
+    [['12v', '#a8322a', 'Kabels 12 V'], ['5v', '#e0a21e', 'Kabels 5 V (C044)']].forEach(([v, col, name]) => {
+      const lab = document.createElement('label');
+      lab.innerHTML = '<input type="checkbox" checked><span class="sw"></span><span></span>';
+      lab.querySelector('.sw').style.background = col; lab.lastChild.textContent = name;
+      lab.querySelector('input').addEventListener('change', e => { wires.forEach(o => { if (o.w.volt === v) o.mesh.visible = e.target.checked; }); });
+      list.insertBefore(lab, list.firstChild);
+    });
     status.textContent = 'Officiële STS3215-modellen (SO-ARM100) met de onderdelen uit cad/biped_v3.py.';
     view('iso');
   }).catch(() => { status.textContent = 'Het model kon niet geladen worden.'; });
 
   function view(kind) {
-    controls.target.set(0, 0, 115);
-    if (kind === 'front') camera.position.set(520, 0, 140);
+    controls.target.set(0, 0, 135);
+    if (kind === 'front') camera.position.set(520, 0, 160);
+    else if (kind === 'back') camera.position.set(-420, -200, 300);
     else if (kind === 'side') camera.position.set(0, -520, 140);
     else camera.position.set(360, -330, 260);
     controls.update();
@@ -145,6 +170,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   document.getElementById('vIso').onclick = () => view('iso');
   document.getElementById('vFront').onclick = () => view('front');
   document.getElementById('vSide').onclick = () => view('side');
+  document.getElementById('vBack').onclick = () => view('back');
   document.getElementById('reset').onclick = () => Object.values(joints).forEach(J => J.set(0));
   document.getElementById('walk').onclick = () => {
     const pose = { roll_l: 6, roll_r: 6, pitch_l: -30, pitch_r: 15, knee_l: 35, knee_r: 10, ankle_l: -5, ankle_r: -25 };
@@ -185,6 +211,6 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
 
   function resize() { const w = stage.clientWidth, h = stage.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
   new ResizeObserver(resize).observe(stage); resize();
-  (function loop() { animate(); controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
+  (function loop() { animate(); updateWires(); controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop); })();
 })();
 </script>

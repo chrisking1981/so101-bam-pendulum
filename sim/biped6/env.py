@@ -13,10 +13,16 @@ import gymnasium as gym
 import mujoco
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from model import build as build_sketch
-import model_v2
+import model_v2, model_v3
+
+# v3 layouts: which joint types get the C044 (1:191, 5 V); all others are 12 V followers
+C044_AT = {"v3_12v": (), "v3_knee": ("knee",), "v3_roll": ("roll",), "v3_pitch": ("pitch",), "v3_ankle": ("ankle",)}
+KIND = lambda j: "roll" if "roll" in j else "pitch" if "pitch" in j else "knee" if "knee" in j else "ankle"
 
 
 def build(variant):
+    if variant.startswith("v3"):
+        return model_v3.build(masses={k: 0.057 for k in C044_AT[variant]})
     if variant.startswith("v2"):              # "v2" or "v2_50" (50 g on top of the torso)
         top = float(variant.split("_")[1]) / 1000 if "_" in variant else 0.0
         return model_v2.build(top)
@@ -26,9 +32,12 @@ from bam.mujoco import MujocoController
 
 REPO = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 PARAMS = os.path.join(REPO, "fits", "STS3215-12V", "m5.json")
+PARAMS_C044 = os.path.join(REPO, "fits", "C044", "m4.json")
+VIN = {"12v": (12.0, 11.0, 12.6), "c044": (5.0, 4.8, 5.4)}   # nominal, randomized range
 QD_Q, SUB, PERIOD = 0.0767, 10, 0.6
 DEFAULT = {"roll": np.zeros(6), "knee": np.array([-0.35, 0.7, -0.35, -0.35, 0.7, -0.35]),
            "knee8": np.array([0, -0.3, 0.6, -0.3, 0, -0.3, 0.6, -0.3])}
+for _v in C044_AT: DEFAULT[_v] = DEFAULT["knee8"]
 
 
 class Biped6Env(gym.Env):
@@ -36,8 +45,15 @@ class Biped6Env(gym.Env):
         super().__init__()
         self.variant, self.randomize, self.max_steps, self.v_cmd = variant, randomize, int(episode_s * 50), v_cmd
         self.m, self.joints = build(variant); self.d = mujoco.MjData(self.m)
-        self.model = load_model(PARAMS); self.model.actuator.kp = 32
-        self.ctrl = MujocoController(self.model, self.joints, self.m, self.d)
+        # one BAM model + controller per servo type ("12v" / "c044"), each on its own joints
+        c044 = C044_AT.get(variant, ())
+        self.types = ["c044" if KIND(j) in c044 else "12v" for j in self.joints]
+        self.groups = {}
+        for t in sorted(set(self.types)):
+            mdl = load_model(PARAMS_C044 if t == "c044" else PARAMS); mdl.actuator.kp = 32
+            js = [j for j, tj in zip(self.joints, self.types) if tj == t]
+            self.groups[t] = (mdl, MujocoController(mdl, js, self.m, self.d), js, [self.joints.index(j) for j in js])
+        self.duty = np.zeros(len(self.joints))
         self.jq = np.array([self.m.joint(j).qposadr[0] for j in self.joints]); self.jv = np.array([self.m.joint(j).dofadr[0] for j in self.joints])
         self.nj = len(self.joints)
         self.default = DEFAULT.get(variant, np.zeros(self.nj))
@@ -77,17 +93,19 @@ class Biped6Env(gym.Env):
         if self.randomize:
             self.m.body_mass[:] = self.base_mass * r.uniform(0.9, 1.1, self.base_mass.shape)
             self.m.geom_friction[self.floor] = self.base_fric * [r.uniform(0.5, 1.2), 1, 1]
-            self.fscale, vin, self.delay = r.uniform(0.7, 1.3), r.uniform(11.0, 12.6), int(r.integers(0, 6))
+            self.fscale, self.delay = r.uniform(0.7, 1.3), int(r.integers(0, 6))
+            vin = {t: r.uniform(*VIN[t][1:]) for t in self.groups}
         else:
             self.m.body_mass[:] = self.base_mass; self.m.geom_friction[self.floor] = self.base_fric
-            self.fscale, vin, self.delay = 1.0, 12.0, 0
-        self.model.actuator.vin = vin
+            self.fscale, self.delay = 1.0, 0
+            vin = {t: VIN[t][0] for t in self.groups}
+        for t, (mdl, *_rest) in self.groups.items(): mdl.actuator.vin = vin[t]
         self.d.qpos[self.jq] = self.default
         mujoco.mj_forward(self.m, self.d)
         low = min(self.d.geom_xpos[f][2] - 0.004 for f in self.feet)
         self.d.qpos[2] += 0.001 - low; mujoco.mj_forward(self.m, self.d)
         self.h0 = self.d.qpos[2]
-        self.ctrl.reset()
+        for _m, ctrl, _j, _i in self.groups.values(): ctrl.reset()
         self.t, self.steps = 0.0, 0
         self.last_a, self.qd_prev, self.tilt_err = np.zeros(self.nj), np.zeros(self.nj), np.zeros(2)
         self.queue = [self.default.copy()] * (self.delay + 1)
@@ -97,13 +115,14 @@ class Biped6Env(gym.Env):
     def step(self, action):
         a = np.clip(np.asarray(action, float), -1, 1)
         goal = self.default + 0.6 * a
-        x0, y0 = self.d.qpos[0], self.d.qpos[1]; power = 0.0
+        x0, y0 = self.d.qpos[0], self.d.qpos[1]; power = 0.0; duty = np.zeros(self.nj)
         if self.randomize and self.t >= self.next_push:
             self.d.qvel[0:2] += self.np_random.uniform(-0.2, 0.2, 2); self.next_push = self.t + self.np_random.uniform(3, 6)
         for _ in range(SUB):
             self.queue.append(goal); g = self.queue.pop(0)
-            for j, gi in zip(self.joints, g): self.ctrl.set_q_target(j, gi)
-            self.ctrl.update()
+            for mdl, ctrl, js, idx in self.groups.values():
+                for j, k in zip(js, idx): ctrl.set_q_target(j, g[k])
+                ctrl.update(); duty[idx] = np.maximum(duty[idx], np.abs(np.atleast_1d(mdl.actuator.duty_cycle)))
             if self.fscale != 1.0: self.m.dof_frictionloss[self.jv] *= self.fscale
             mujoco.mj_step(self.m, self.d)
             power += float(np.sum(np.abs(self.d.qfrc_actuator[self.jv] * self.d.qvel[self.jv])))
@@ -118,7 +137,8 @@ class Biped6Env(gym.Env):
                   - 0.3 * float(np.sum((a - self.last_a) ** 2)) - 0.02 * float(np.sum(a ** 2)) - 0.003 * power)
         if fell: reward -= 10.0
         self.last_a = a
-        return self._obs(), float(reward), bool(fell), self.steps >= self.max_steps, {"x": self.d.qpos[0], "y": self.d.qpos[1], "power": power}
+        return self._obs(), float(reward), bool(fell), self.steps >= self.max_steps, {"x": self.d.qpos[0], "y": self.d.qpos[1], "power": power, "duty": duty,
+                                                                                    "tau": self.d.qfrc_actuator[self.jv].copy()}
 
     def render(self):
         if self._renderer is None:

@@ -153,6 +153,66 @@ def finish(solid, cuts):
     return solid
 
 
+# ---------------------------------------------------------------- electronics on top, cable clips
+TORSO_X = (CASE["zb"] - CLR - WALL, CASE["zf"] + CLR + WALL)          # torso box front-back (x)
+TORSO_YW = HY + CASE["y"][1] + CLR + WALL                              # torso half width
+TORSO_TOP = Z_ROLL + (SHAFT_X - CASE["x"][0]) + CLR + WALL             # top of the deck
+RACK_H, RACK_T = 12.0, 6.0          # rack: 12 mm pillars over the Nano, 6 mm top with the two dovetail sockets
+RACK_TOP = TORSO_TOP + RACK_H + RACK_T
+PLATE_Y = 25.8                      # the two SO-101 board plates (51 x 42) side by side, centres at y = +-25.8
+KEY = dict(narrow=16.0, wide=18.2, depth=3.6)   # square dovetail key under the SO-101 mounting plate (measured from the STL)
+DECK_M3 = [(xx, yy) for xx in (TORSO_X[0] + 5, TORSO_X[1] - 5) for yy in (-TORSO_YW + 6, TORSO_YW - 6)]
+CABLE_D = 3.5                       # bore of the cable clips (servo cable about 3 mm)
+
+
+def make_rack():
+    """Board rack: screwed on the four M3 holes of the torso deck on 12 mm pillars (the Nano stays underneath), with two dovetail
+    sockets that take the SO-101 board mounting plate (Seeed or WaveShare version) sliding in from the back, as on the SO-101 base."""
+    x0, x1 = TORSO_X
+    sol = box(x0, x1, -TORSO_YW, TORSO_YW, TORSO_TOP + RACK_H, RACK_TOP)
+    cuts = [box(-9, 9, -TORSO_YW + 14, TORSO_YW - 14, TORSO_TOP + RACK_H - 1, RACK_TOP - KEY["depth"] - 1.2)]   # lighten the middle
+    for (xx, yy) in DECK_M3:
+        sol += cyl((xx, yy, TORSO_TOP), (0, 0, 1), 4.0, 0, RACK_H + 0.5)
+        cuts.append(cyl((xx, yy, TORSO_TOP - 1), (0, 0, 1), M3 / 2, 0, RACK_H + RACK_T + 2))
+        cuts.append(cyl((xx, yy, RACK_TOP - 2.5), (0, 0, 1), 3.2, 0, 3))                 # head counterbore
+    c = 0.2
+    for yc in (-PLATE_Y, PLATE_Y):
+        # dovetail channel along x, open at the back (-x), stop at the front edge of the key
+        prof = b.Polygon((yc - KEY["narrow"] / 2 - c, RACK_TOP + 0.01), (yc + KEY["narrow"] / 2 + c, RACK_TOP + 0.01),
+                         (yc + KEY["wide"] / 2 + c, RACK_TOP - KEY["depth"] - c), (yc - KEY["wide"] / 2 - c, RACK_TOP - KEY["depth"] - c), align=None)
+        length = (KEY["wide"] / 2 + c) - (x0 - 1)
+        ch = b.extrude(b.Plane.YZ.offset(x0 - 1) * prof, amount=length)
+        cuts.append(ch)
+    return finish(sol, cuts)
+
+
+def clip(p, n, z_len=7.0):
+    """Cable clip on a flat face: p = point on the face, n = outward normal (+-x or +-y). A ring around a vertical cable with a 2.6 mm
+    mouth so the cable clicks in, on a 1.6 mm pad, like the cable clips moulded on the SO-101 arm parts."""
+    p, n = np.array(p, float), np.array(n, float); t = np.array([-n[1], n[0], 0.0])        # t: along the face, horizontal
+    r_in, r_out, pad = CABLE_D / 2, CABLE_D / 2 + 1.3, 1.6
+    cen = p + n * (pad + r_in + 0.2)
+    corners = [p - t * 4, p + t * 4, p - t * 4 + n * pad, p + t * 4 + n * pad]
+    xs, ys = [q[0] for q in corners], [q[1] for q in corners]
+    body = box(min(xs), max(xs), min(ys), max(ys), p[2] - z_len / 2, p[2] + z_len / 2) + cyl(cen, (0, 0, 1), r_out, -z_len / 2, z_len / 2)
+    body -= cyl(cen, (0, 0, 1), r_in, -z_len, z_len)
+    m0, m1 = cen + n * 0.5 - t * 1.3, cen + n * (r_out + 1) + t * 1.3
+    body -= box(min(m0[0], m1[0]), max(m0[0], m1[0]), min(m0[1], m1[1]), max(m0[1], m1[1]), p[2] - z_len, p[2] + z_len)
+    return body
+
+
+def clip_spots(side):
+    """Where the clips sit (point on the face, outward normal), per link."""
+    s = 1 if side == "l" else -1
+    thigh_in = s * (HY + CASE["zb"] - CLR - WALL)            # inner face of the thigh's back plate
+    shank_in = s * (HY + BACK_HORN - PLATE)                  # inner face of the shank's back clevis plate
+    return {"thigh": [((-7.0, thigh_in, 122.0), (0, -s, 0))],
+            "shank": [((-7.0, shank_in, 64.0), (0, -s, 0))]}
+
+
+TORSO_CLIPS = [((TORSO_X[0], yy, TORSO_TOP - 9.0), (-1, 0, 0)) for yy in (-30.0, -13.0, 13.0, 30.0)]
+
+
 # ---------------------------------------------------------------- parts
 def make_torso():
     """A closed box around the far ends of both hip-roll servos: front and back plates over the full width, deck on top with the
@@ -178,7 +238,10 @@ def make_torso():
     for xx in (xb0 + 5, xf1 - 5):                                                           # M3 holes for a head / extra weight
         for yy in (-yw + 6, yw - 6):
             cuts.append(cyl((xx, yy, z_hi - WALL - 1), (0, 0, 1), M3 / 2, 0, WALL + 2))
-    return finish(sol, cuts)
+    sol = finish(sol, cuts)
+    for p, n in TORSO_CLIPS:
+        sol += clip(p, n)
+    return sol
 
 
 def make_hip(side):
@@ -205,7 +268,10 @@ def make_thigh(side):
     for face, sgn in ((CASE["zf"] + CLR, 1), (CASE["zb"] - CLR, -1)):
         yy = [s * HY + s * face, s * HY + s * (face + sgn * WALL)]
         body += box(-xw, xw, min(yy), max(yy), z0, z1)
-    return finish(body, [cp, ck])
+    body = finish(body, [cp, ck])
+    for p, n in clip_spots(side)["thigh"]:
+        body += clip(p, n)
+    return body
 
 
 def make_shank(side):
@@ -220,8 +286,11 @@ def make_shank(side):
     for ys, face in ((yo, CASE["zf"] + CLR), (yi, CASE["zb"] - CLR)):
         yy = ys + [s * HY + s * face]
         body += box(-HUB_R, HUB_R, min(yy), max(yy), Z_ANKLE + 18.5, z_top_ankle)
-    return finish(body, [hc, horn_holes(knee, FRONT_HORN, 1), horn_holes(knee, BACK_HORN, -1),
+    body = finish(body, [hc, horn_holes(knee, FRONT_HORN, 1), horn_holes(knee, BACK_HORN, -1),
                          ankle.location() * box(CASE["x"][0] - CLR, HOLD_FROM + 2, CASE["y"][0] - CLR, CASE["y"][1] + CLR, CASE["zb"] - CLR, CASE["zf"] + CLR)])
+    for p, n in clip_spots(side)["shank"]:
+        body += clip(p, n)
+    return body
 
 
 def make_foot(side):
@@ -232,7 +301,7 @@ def make_foot(side):
     return finish(foot, [horn_holes(ankle, FRONT_HORN, 1), horn_holes(ankle, BACK_HORN, -1)])
 
 
-parts = {"torso": make_torso()}
+parts = {"torso": make_torso(), "rack": make_rack()}
 for side in "lr":
     parts[f"hip_{side}"] = make_hip(side); parts[f"thigh_{side}"] = make_thigh(side)
     parts[f"shank_{side}"] = make_shank(side); parts[f"foot_{side}"] = make_foot(side)
@@ -276,7 +345,10 @@ for k, m in servo_meshes.items():
     m.export(OUT / f"servo_{k}.stl")
 bad = [k for k, m in list(meshes.items()) + list(servo_meshes.items()) if not m.is_watertight]
 print("meshes not watertight:", bad if bad else "none")
-json.dump(dict(HY=HY, Z_ANKLE=Z_ANKLE, Z_KNEE=Z_KNEE, Z_PITCH=Z_PITCH, Z_ROLL=Z_ROLL, L_THIGH=L_THIGH, L_SHANK=L_SHANK, H_HIP=H_HIP,
+json.dump(dict(TORSO_TOP=TORSO_TOP, RACK_TOP=RACK_TOP, PLATE_Y=PLATE_Y, TORSO_X=TORSO_X, TORSO_YW=TORSO_YW, CABLE_D=CABLE_D,
+               clips=dict(torso=[[list(p), list(n)] for p, n in TORSO_CLIPS], **{f"{k}_{sd}": [[list(p), list(n)] for p, n in v]
+                                                                            for sd in "lr" for k, v in clip_spots(sd).items()}),
+               HY=HY, Z_ANKLE=Z_ANKLE, Z_KNEE=Z_KNEE, Z_PITCH=Z_PITCH, Z_ROLL=Z_ROLL, L_THIGH=L_THIGH, L_SHANK=L_SHANK, H_HIP=H_HIP,
                volumes_mm3={k: float(m.volume) for k, m in meshes.items()},
                servos={k: dict(p=sv.p.tolist(), ez=sv.ez.tolist(), ex=sv.ex.tolist()) for k, sv in servos.items()}),
           open(OUT / "biped_v3_params.json", "w"), indent=1)
