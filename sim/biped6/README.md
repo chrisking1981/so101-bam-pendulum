@@ -50,3 +50,28 @@ The hip roll carries the torso and the other leg sideways whenever the robot sta
 is the lightest. Chosen layout: **C044 at the hip pitch** (also short cables: the 5 V board sits on the torso right above them).
 Walking trainings for all-12 V, C044 at the knee, at the hip roll and at the hip pitch (`--variant v3_12v / v3_knee / v3_roll / v3_pitch`)
 are running; they show the dynamic loads while walking.
+
+**First walking trainings (3 M steps each, no electronics mass yet)** ([`eval_v3.py`](eval_v3.py), [table](eval_v3_first.md)):
+not usable for the comparison. Every policy learned to park a joint on its end stop (mostly the ankle at -0.79 rad with a goal of
+-0.89): the servo then pushes at stall torque (3.7-4.0 Nm, duty 0.97) without moving, so it costs nothing in the power term. The
+all-12 V policy stood almost still that way (6 cm in 10 s); the others limped, with one ankle locked. On the real robot that is a
+servo stalled into a printed stop. Fix in [`env.py`](env.py): goals are clipped 0.05 rad inside the joint range (like the servo's
+EEPROM angle limits), and duty above 0.5 is penalised. Retraining as `runs/v3b_*`.
+
+**Retrained with the fix and the electronics mass (`runs/v3b_*`, 3 M steps each, one seed)** ([table](eval_v3b.md)), 20 randomized
+episodes of 10 s, command 15 cm/s (150 cm):
+
+| layout | forward, mean (min) | sideways drift | falls | C044 torque mean / p95 |
+|---|---:|---:|---:|---:|
+| all 12 V | 39 cm (-21) | 72 cm | 1/20 | - |
+| C044 at knee | 68 cm (-10) | 77 cm | 7/20 | 0.22 / 0.63 Nm |
+| C044 at hip roll | 56 cm (-67) | 131 cm | 2/20 | 0.46 / 1.02 Nm |
+| **C044 at hip pitch** | **113 cm (3)** | **35 cm** | **0/20** | 0.29 / 0.90 Nm |
+
+- The end-stop trick is gone (ankle torque 3.7 -> 0.2 Nm mean).
+- **C044 at the hip pitch walks best**: furthest, straightest, no falls. Its mean torque (0.29 Nm) is well inside what a C044 at 5 V
+  can give; the hip roll C044 needs 60% more.
+- Servos still hit full duty 12-31% of the time at the hips, but while swinging at about 4 rad/s (near full speed), not while
+  holding weight: the gait is quick and jerky, not overloaded. Videos: `runs/v3b_*/walk_*.mp4`.
+- One seed per layout and a crude gait (crouched, shuffling), so the ranking is indicative. Next: a smoother gait (reference
+  foot trajectory, stronger action smoothing), several seeds, longer training on the RTX 3090.

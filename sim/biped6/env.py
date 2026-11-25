@@ -5,7 +5,8 @@ late and quantised to 0.0767 rad/s; IMU (Nano on the torso) as projected gravity
 randomized BAM friction x0.7-1.3, supply 11-12.6 V, link masses +-10 %, floor friction 0.5-1.2, extra delay 0-10 ms, pushes.
 Action (6): joint goals = default pose + 0.6 rad * a. Observation (31): joint pos (6), 0.1 x joint speed (6), projected gravity (3),
 0.2 x gyro (3), last action (6), gait clock sin/cos (2), command (1), 1, foot contacts (2) are NOT observed (no foot sensors), pad (3).
-Reward: forward speed up to the command, alive, upright, straight heading, alternating feet on the gait clock, smooth actions, power.
+Reward: forward speed up to the command, alive, upright, straight heading, alternating feet on the gait clock, smooth actions, power,
+duty cycle above 0.5. Goals are clipped inside the joint range (servo angle limits).
 """
 import os, sys
 import numpy as np
@@ -57,6 +58,9 @@ class Biped6Env(gym.Env):
         self.jq = np.array([self.m.joint(j).qposadr[0] for j in self.joints]); self.jv = np.array([self.m.joint(j).dofadr[0] for j in self.joints])
         self.nj = len(self.joints)
         self.default = DEFAULT.get(variant, np.zeros(self.nj))
+        # goals are clipped 0.05 rad inside the joint range, like the angle limits in the servo EEPROM, so a goal can never push a
+        # joint into its end stop (earlier policies parked the ankle on its stop at stall torque: zero power, but a hot servo)
+        rng = self.m.jnt_range[[self.m.joint(j).id for j in self.joints]]; self.qlo, self.qhi = rng[:, 0] + 0.05, rng[:, 1] - 0.05
         self.floor = self.m.geom("floor").id; self.feet = [self.m.geom("foot_l").id, self.m.geom("foot_r").id]
         self.base_mass = self.m.body_mass.copy(); self.base_fric = self.m.geom_friction[self.floor].copy()
         self.action_space = gym.spaces.Box(-1, 1, (self.nj,), np.float32)
@@ -114,7 +118,7 @@ class Biped6Env(gym.Env):
 
     def step(self, action):
         a = np.clip(np.asarray(action, float), -1, 1)
-        goal = self.default + 0.6 * a
+        goal = np.clip(self.default + 0.6 * a, self.qlo, self.qhi)
         x0, y0 = self.d.qpos[0], self.d.qpos[1]; power = 0.0; duty = np.zeros(self.nj)
         if self.randomize and self.t >= self.next_push:
             self.d.qvel[0:2] += self.np_random.uniform(-0.2, 0.2, 2); self.next_push = self.t + self.np_random.uniform(3, 6)
@@ -134,7 +138,8 @@ class Biped6Env(gym.Env):
         gait = 0.3 * ((phase < 0.5 and cl and not cr) or (phase >= 0.5 and cr and not cl))
         fell = self.d.qpos[2] < 0.6 * self.h0 or tilt > 0.8
         reward = (3.0 * min(vx, self.v_cmd) + 0.3 - 1.0 * abs(vy) - 0.5 * yaw ** 2 - 1.0 * tilt ** 2 + gait
-                  - 0.3 * float(np.sum((a - self.last_a) ** 2)) - 0.02 * float(np.sum(a ** 2)) - 0.003 * power)
+                  - 0.3 * float(np.sum((a - self.last_a) ** 2)) - 0.02 * float(np.sum(a ** 2)) - 0.003 * power
+                  - 1.0 * float(np.mean(np.maximum(duty - 0.5, 0.0))))   # servo working above half its voltage: heat, no reserve
         if fell: reward -= 10.0
         self.last_a = a
         return self._obs(), float(reward), bool(fell), self.steps >= self.max_steps, {"x": self.d.qpos[0], "y": self.d.qpos[1], "power": power, "duty": duty,
