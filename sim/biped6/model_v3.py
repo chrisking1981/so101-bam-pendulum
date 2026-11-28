@@ -65,8 +65,47 @@ def electronics_items():
     return items
 
 
-def build_xml(top_mass=0.0, dt=0.002, masses=None, electronics=True):
-    """masses: {"roll"/"pitch"/"knee"/"ankle": kg} servo mass per joint type (default 59 g). electronics: rack, plates, boards, cables."""
+def visual_parts(c044=()):
+    """CAD meshes (cad/biped_v3/*.stl, world rest coordinates in mm) per body, with colours as in the 3D viewer. Only for videos."""
+    E = json.load(open(os.path.join(CAD, "electronics.json")))["parts"]
+    out = [("torso", "torso", "#dfe3e8"), ("rack", "torso", "#cfd5db")]
+    out += [(f"elec_{k}", v["link"], v["color"]) for k, v in E.items()]
+    dark, blue = "#3b3f4a", "#3d6f9e"
+    for s in "lr":
+        out += [(f"hip_{s}", f"hip_{s}", "#d2a05a"), (f"thigh_{s}", f"thigh_{s}", "#c99a5b"), (f"shank_{s}", f"shank_{s}", "#b98a4d"),
+                (f"foot_{s}", f"foot_{s}", "#e07a4f")]
+        for k, link in (("roll", "torso"), ("pitch", f"thigh_{s}"), ("knee", f"thigh_{s}"), ("ankle", f"shank_{s}")):
+            out.append((f"servo_{k}_{s}", link, blue if k in c044 else dark))
+    return out
+
+
+def add_visuals(xml, origins, c044=()):
+    """Add the CAD meshes as visual-only geoms (no collision, no mass) and move the collision boxes to hidden group 3.
+    The physics stays exactly the same as without visuals."""
+    assets, geoms = [], {}
+    for name, link, col in visual_parts(c044):
+        rgb = " ".join(f"{int(col[i:i+2], 16)/255:.3f}" for i in (1, 3, 5))
+        assets.append(f'<mesh name="v_{name}" file="{os.path.join(CAD, name + ".stl")}" scale="0.001 0.001 0.001"/>')
+        o = origins[link]
+        geoms.setdefault(link, []).append(f'<geom type="mesh" mesh="v_{name}" pos="{-o[0]:.5f} {-o[1]:.5f} {-o[2]:.5f}" contype="0" '
+                                          f'conaffinity="0" group="1" rgba="{rgb} 1"/>')
+    xml = xml.replace('contype="2"', 'contype="2" group="3"')
+    xml = xml.replace('<compiler angle="radian"/>', '<compiler angle="radian" inertiafromgeom="false"/>')
+    assets += ['<texture name="grid" type="2d" builtin="checker" rgb1=".86 .87 .86" rgb2=".76 .78 .77" width="300" height="300"/>',
+               '<material name="grid" texture="grid" texrepeat="30 30"/>',
+               '<texture name="sky" type="skybox" builtin="gradient" rgb1=".55 .65 .75" rgb2=".95 .96 .97" width="256" height="256"/>']
+    xml = xml.replace('rgba=".85 .87 .85 1"', 'material="grid"')
+    xml = xml.replace('<global offwidth="960" offheight="540"/>', '<global offwidth="1280" offheight="720"/><headlight ambient=".35 .35 .35" diffuse=".5 .5 .5"/>')
+    xml = xml.replace("<worldbody>", "<asset>" + "".join(assets) + "</asset>\n  <worldbody>", 1)
+    for link, gs in geoms.items():
+        i = xml.index(f'<body name="{link}"'); j = xml.index(">", i) + 1
+        xml = xml[:j] + "\n" + "\n".join(gs) + xml[j:]
+    return xml
+
+
+def build_xml(top_mass=0.0, dt=0.002, masses=None, electronics=True, visual=False):
+    """masses: {"roll"/"pitch"/"knee"/"ankle": kg} servo mass per joint type (default 59 g). electronics: rack, plates, boards, cables.
+    visual: also draw the real CAD parts (servos with a C044 mass are drawn blue)."""
     sm = {"roll": SERVO, "pitch": SERVO, "knee": SERVO, "ankle": SERVO, **(masses or {})}
     zr, zp, zk, za, hy = P["Z_ROLL"] / 1000, P["Z_PITCH"] / 1000, P["Z_KNEE"] / 1000, P["Z_ANKLE"] / 1000, P["HY"] / 1000
     t_items = [part_inertial("torso"), servo_inertial("roll_l", sm["roll"]), servo_inertial("roll_r", sm["roll"])]
@@ -123,11 +162,17 @@ def build_xml(top_mass=0.0, dt=0.002, masses=None, electronics=True):
   </worldbody>
   <actuator>{"".join(f'<motor name="{j}" joint="{j}" gear="1"/>' for j in JOINTS)}</actuator>
 </mujoco>"""
+    if visual:
+        origins = {"torso": np.array([0, 0, zr])}
+        for s, sg in (("l", 1), ("r", -1)):
+            origins.update({f"hip_{s}": np.array([0, sg * hy, zr]), f"thigh_{s}": np.array([0, sg * hy, zp]),
+                            f"shank_{s}": np.array([0, sg * hy, zk]), f"foot_{s}": np.array([0, sg * hy, za])})
+        xml = add_visuals(xml, origins, tuple(k for k, v in (masses or {}).items() if abs(v - 0.057) < 1e-6))
     return xml, list(JOINTS)
 
 
-def build(top_mass=0.0, dt=0.002, masses=None, electronics=True):
-    xml, j = build_xml(top_mass, dt, masses, electronics); return mujoco.MjModel.from_xml_string(xml), j
+def build(top_mass=0.0, dt=0.002, masses=None, electronics=True, visual=False):
+    xml, j = build_xml(top_mass, dt, masses, electronics, visual); return mujoco.MjModel.from_xml_string(xml), j
 
 
 if __name__ == "__main__":

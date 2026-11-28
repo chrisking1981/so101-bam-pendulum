@@ -21,9 +21,9 @@ C044_AT = {"v3_12v": (), "v3_knee": ("knee",), "v3_roll": ("roll",), "v3_pitch":
 KIND = lambda j: "roll" if "roll" in j else "pitch" if "pitch" in j else "knee" if "knee" in j else "ankle"
 
 
-def build(variant):
+def build(variant, visual=False):
     if variant.startswith("v3"):
-        return model_v3.build(masses={k: 0.057 for k in C044_AT[variant]})
+        return model_v3.build(masses={k: 0.057 for k in C044_AT[variant]}, visual=visual)
     if variant.startswith("v2"):              # "v2" or "v2_50" (50 g on top of the torso)
         top = float(variant.split("_")[1]) / 1000 if "_" in variant else 0.0
         return model_v2.build(top)
@@ -45,7 +45,7 @@ class Biped6Env(gym.Env):
     def __init__(self, variant="knee", randomize=True, episode_s=10.0, v_cmd=0.15, render=False):
         super().__init__()
         self.variant, self.randomize, self.max_steps, self.v_cmd = variant, randomize, int(episode_s * 50), v_cmd
-        self.m, self.joints = build(variant); self.d = mujoco.MjData(self.m)
+        self.m, self.joints = build(variant, visual=render) if variant.startswith("v3") else build(variant); self.d = mujoco.MjData(self.m)
         # one BAM model + controller per servo type ("12v" / "c044"), each on its own joints
         c044 = C044_AT.get(variant, ())
         self.types = ["c044" if KIND(j) in c044 else "12v" for j in self.joints]
@@ -147,7 +147,8 @@ class Biped6Env(gym.Env):
 
     def render(self):
         if self._renderer is None:
-            self._renderer = mujoco.Renderer(self.m, 540, 960); self._cam = mujoco.MjvCamera()
-            self._cam.distance, self._cam.azimuth, self._cam.elevation = 0.9, 120, -14
+            big = self.m.vis.global_.offwidth >= 1280
+            self._renderer = mujoco.Renderer(self.m, 720 if big else 540, 1280 if big else 960); self._cam = mujoco.MjvCamera()
+            self._cam.distance, self._cam.azimuth, self._cam.elevation = (0.65 if big else 0.9), 125, -14
         self._cam.lookat[:] = [self.d.qpos[0], self.d.qpos[1], 0.12]
         self._renderer.update_scene(self.d, camera=self._cam); return self._renderer.render()
